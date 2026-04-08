@@ -2,15 +2,6 @@
 
 A modern web application for searching and browsing herbarium specimens. Built with React 19, TypeScript, and Bootstrap 5.
 
-## Features
-
-- 🔍 **Simple Search** - Quick search from the home page
-- 🎯 **Advanced Search** - Faceted search with multiple filters
-- 📊 **Rich Details** - Comprehensive specimen information
-- 🎨 **Modern UI** - Clean Bootstrap 5 design
-- 📱 **Responsive** - Works on all device sizes
-- ⚡ **Fast** - Built with Vite for optimal performance
-
 ## Quick Start
 
 ### Prerequisites
