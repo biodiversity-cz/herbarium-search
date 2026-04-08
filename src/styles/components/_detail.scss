@@ -1,0 +1,75 @@
+// Detail page styles
+
+.detail-page {
+  min-height: calc(100vh - 200px);
+  padding: 2rem 0;
+}
+
+.specimen-detail {
+  .specimen-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      font-style: italic;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+
+    .catalog-number {
+      font-size: 1.2rem;
+      color: #666;
+      font-weight: 500;
+    }
+  }
+
+  .specimen-image-container {
+    margin-bottom: 2rem;
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .specimen-info {
+    .info-section {
+      margin-bottom: 2rem;
+
+      h3 {
+        font-size: 1.3rem;
+        color: #333;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #667eea;
+      }
+
+      .info-row {
+        display: flex;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e9ecef;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .info-label {
+          font-weight: 600;
+          color: #666;
+          width: 200px;
+          flex-shrink: 0;
+        }
+
+        .info-value {
+          color: #333;
+          flex: 1;
+        }
+      }
+    }
+  }
+
+  .back-button {
+    margin-bottom: 2rem;
+  }
+}

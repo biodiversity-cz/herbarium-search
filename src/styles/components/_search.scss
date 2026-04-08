@@ -1,0 +1,79 @@
+// Search page styles
+
+.search-page {
+  min-height: calc(100vh - 200px);
+}
+
+.search-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.search-container {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.facets-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+
+  .facet-group {
+    margin-bottom: 2rem;
+
+    h5 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+  }
+}
+
+.search-results {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .result-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .result-title {
+    font-weight: 600;
+    color: #333;
+    font-style: italic;
+  }
+
+  .result-meta {
+    font-size: 0.9rem;
+    color: #666;
+  }
+}
+
+.search-stats {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}

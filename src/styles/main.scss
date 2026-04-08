@@ -1,0 +1,24 @@
+// Import Bootstrap 5
+@import "bootstrap/scss/bootstrap";
+
+// Custom variables (override before importing bootstrap if needed)
+// @import "variables";
+
+// Global styles
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+// Component-specific styles
+@import "components/search";
+@import "components/detail";
+@import "components/layout";
