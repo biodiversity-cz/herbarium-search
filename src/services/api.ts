@@ -1,30 +1,71 @@
 import axios from 'axios';
-import { HerbariumRecord, SolrResponse, SuggesterResponse } from '@types';
+import { HerbariumRecord, SolrResponse, SuggesterResponse, FacetData } from '@types';
 
 const API_BASE_URL = 'https://herbarium.biodiversity.cz/solr/specimens';
 
 /**
+ * Fetch facet data for specific fields
+ */
+export async function getFacets(
+  query: string = '*:*',
+  filters: string[] = [],
+  facetFields: string[] = ['taxon', 'collector', 'locality'],
+  facetSize: number = 50
+): Promise<FacetData> {
+  const params: Record<string, any> = {
+    q: query,
+    facet: 'true',
+    'facet.limit': facetSize
+  };
+
+  // Add facet fields dynamically
+  facetFields.forEach((field, index) => {
+    params[`facet.field.${index}`] = field;
+  });
+
+  if (filters.length > 0) {
+    // Join multiple filters with AND, but pass as single string to avoid fq[] encoding
+    params.fq = filters.join(' AND ');
+  }
+
+  const response = await axios.get<FacetData>(`${API_BASE_URL}/select`, {
+    params
+  });
+
+  return response.data;
+}
+
+/**
  * Search herbarium records using Solr
+ * When includeFacets is true, also returns facet counts for configured fields
  */
 export async function searchRecords(
   query: string = '*:*',
   filters: string[] = [],
   start: number = 0,
   rows: number = 10,
-  facet: boolean = true
+  includeFacets: boolean = false
 ): Promise<SolrResponse> {
   const params: Record<string, any> = {
     q: query,
     start,
     rows,
-    facet: facet ? 'true' : 'false'
+    facet: includeFacets ? 'true' : 'false'
   };
 
-  if (filters.length > 0) {
-    params.fq = filters;
+  if (includeFacets) {
+    params['facet.limit'] = 50;
+    params['facet.field.0'] = 'taxon';
+    params['facet.field.1'] = 'collector';
+    params['facet.field.2'] = 'locality';
   }
 
-  const response = await axios.get<SolrResponse>(`${API_BASE_URL}/search`, {
+  if (filters.length > 0) {
+    // Join multiple filters with AND, but pass as single string to avoid fq[] encoding
+    params.fq = filters.join(' AND ');
+  }
+
+  const response = await axios.get<SolrResponse>(`${API_BASE_URL}/select`, {
     params
   });
 

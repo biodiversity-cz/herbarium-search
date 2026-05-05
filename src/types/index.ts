@@ -46,6 +46,27 @@ export interface SolrResponse {
 }
 
 /**
+ * Facet Data Response (from /select endpoint)
+ */
+export interface FacetData {
+  responseHeader: {
+    status: number;
+    QTime: number;
+    params: Record<string, string>;
+  };
+  response: {
+    numFound: number;
+    start: number;
+    docs: HerbariumRecord[];
+  };
+  facet_counts: {
+    facet_fields: {
+      [field: string]: Array<string | number>;
+    };
+  };
+}
+
+/**
  * Search Filters
  */
 export interface SearchFilters {

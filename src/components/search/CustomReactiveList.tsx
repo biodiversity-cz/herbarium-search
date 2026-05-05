@@ -30,7 +30,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ record }) => {
             <h5 className="result-title mb-2">{record.scientificName}</h5>
             <div className="result-meta">
               <p className="mb-1">
-                <strong>Catalog Number:</strong> {record.catalogNumber}
+                <strong>Catalog Number:</strong> {record.id}
               </p>
               {record.family && (
                 <p className="mb-1">

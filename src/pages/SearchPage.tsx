@@ -1,8 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { searchRecords } from '@services/api';
-import { HerbariumRecord, SolrResponse } from '@types';
+import { searchRecords, getSuggestions } from '@services/api';
+import { HerbariumRecord, SolrResponse, SuggesterResponse, SuggestSuggestion } from '@types';
 import ResultCard from '@components/search/CustomReactiveList';
+
+interface SelectedFacetValues {
+  taxon: string[];
+  collector: string[];
+  locality: string[];
+}
+
+interface TaxonSuggestion {
+  term: string;
+}
+
+const parseFacetArray = (facetArray: Array<string | number>): { value: string; count: number }[] => {
+  const result: { value: string; count: number }[] = [];
+  for (let i = 0; i < facetArray.length; i += 2) {
+    result.push({
+      value: facetArray[i] as string,
+      count: facetArray[i + 1] as number
+    });
+  }
+  return result;
+};
+
+const capitalizeWithHtml = (term: string): string => {
+  if (term.startsWith('<b>')) {
+    const closeIdx = term.indexOf('</b>');
+    if (closeIdx > 0) {
+      const highlightedContent = term.substring(3, closeIdx);
+      const restOfTerm = term.substring(closeIdx + 4);
+      const capitalizedFirst = highlightedContent.charAt(0).toUpperCase();
+      return `<b>${capitalizedFirst}${highlightedContent.slice(1)}</b>${restOfTerm}`;
+    }
+  }
+  return term.charAt(0).toUpperCase() + term.slice(1);
+};
 
 const SearchPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -10,118 +44,253 @@ const SearchPage: React.FC = () => {
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState(searchParams.get('q') || '');
-  const [selectedFamily, setSelectedFamily] = useState<string>('');
-  const [selectedCountry, setSelectedCountry] = useState<string>('');
-  const [selectedGenus, setSelectedGenus] = useState<string>('');
-  const [presetFilters, setPresetFilters] = useState<{taxon: string[], collector: string[], locality: string[]}>({
+  const [query] = useState(searchParams.get('q') || '');
+  
+  // Initialize facet selections from URL parameters (includes preset filters)
+  const [selectedFacets, setSelectedFacets] = useState<SelectedFacetValues>(() => ({
+    taxon: searchParams.getAll('taxon'),
+    collector: searchParams.getAll('collector'),
+    locality: searchParams.getAll('locality')
+  }));
+  
+  // Available facet options from Solr (filtered by current selection)
+  const [facetOptions, setFacetOptions] = useState<{
+    taxon: { value: string; count: number }[];
+    collector: { value: string; count: number }[];
+    locality: { value: string; count: number }[];
+  }>({
     taxon: [],
     collector: [],
     locality: []
   });
-  const [facets, setFacets] = useState<any>(null);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const resultsPerPage = 10;
+  
+  // Taxon autocomplete state
+  const [taxonQuery, setTaxonQuery] = useState('');
+  const [taxonSuggestions, setTaxonSuggestions] = useState<TaxonSuggestion[]>([]);
+  const [taxonLoading, setTaxonLoading] = useState(false);
+  const [showTaxonDropdown, setShowTaxonDropdown] = useState(false);
+  const [highlightedTaxonIndex, setHighlightedTaxonIndex] = useState(-1);
+  const taxonDropdownRef = useRef<HTMLDivElement>(null);
+  const taxonInputRef = useRef<HTMLInputElement>(null);
+  const taxonDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Initialize preset filters from URL parameters on mount
+  // Close taxon dropdown when clicking outside
   useEffect(() => {
-    const taxons = searchParams.getAll('taxon');
-    const collectors = searchParams.getAll('collector');
-    const localities = searchParams.getAll('locality');
-    
-    if (taxons.length > 0 || collectors.length > 0 || localities.length > 0) {
-      setPresetFilters({
-        taxon: taxons,
-        collector: collectors,
-        locality: localities
-      });
+    const handleClickOutside = (event: MouseEvent) => {
+      if (taxonDropdownRef.current && !taxonDropdownRef.current.contains(event.target as Node)) {
+        setShowTaxonDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch taxon suggestions
+  const fetchTaxonSuggestions = useCallback(async (query: string) => {
+    if (!query || query.length < 2) {
+      setTaxonSuggestions([]);
+      setShowTaxonDropdown(false);
+      return;
     }
-  }, [searchParams]);
 
+    setTaxonLoading(true);
+    try {
+      const response: SuggesterResponse = await getSuggestions(query);
+      const options: TaxonSuggestion[] = [];
+
+      if (response.suggest.taxonSuggest) {
+        const queryKey = Object.keys(response.suggest.taxonSuggest)[0];
+        if (queryKey && response.suggest.taxonSuggest[queryKey]?.suggestions) {
+          response.suggest.taxonSuggest[queryKey].suggestions.forEach((option: SuggestSuggestion) => {
+            options.push({ term: capitalizeWithHtml(option.term) });
+          });
+        }
+      }
+
+      setTaxonSuggestions(options);
+      setShowTaxonDropdown(options.length > 0);
+      setHighlightedTaxonIndex(-1);
+    } catch (error) {
+      console.error('Error fetching taxon suggestions:', error);
+      setTaxonSuggestions([]);
+    } finally {
+      setTaxonLoading(false);
+    }
+  }, []);
+
+  // Debounced taxon suggestion fetching
   useEffect(() => {
-    performSearch();
-  }, [query, selectedFamily, selectedCountry, selectedGenus, currentPage, presetFilters]);
+    if (taxonDebounceRef.current) {
+      clearTimeout(taxonDebounceRef.current);
+    }
 
-  const performSearch = async () => {
+    if (taxonQuery.length >= 2) {
+      taxonDebounceRef.current = setTimeout(() => {
+        fetchTaxonSuggestions(taxonQuery);
+      }, 300);
+    } else {
+      setTaxonSuggestions([]);
+      setShowTaxonDropdown(false);
+    }
+
+    return () => {
+      if (taxonDebounceRef.current) {
+        clearTimeout(taxonDebounceRef.current);
+      }
+    };
+  }, [taxonQuery, fetchTaxonSuggestions]);
+
+  // Add taxon from autocomplete
+  const addTaxonFromAutocomplete = useCallback((suggestion: TaxonSuggestion) => {
+    const cleanTerm = suggestion.term.replace(/<\/?b>/g, '');
+    
+    setSelectedFacets(prev => {
+      if (prev.taxon.includes(cleanTerm)) return prev;
+      return { ...prev, taxon: [...prev.taxon, cleanTerm] };
+    });
+    
+    setTaxonQuery('');
+    setTaxonSuggestions([]);
+    setShowTaxonDropdown(false);
+    setCurrentPage(1);
+  }, []);
+
+  // Remove taxon filter
+  const removeTaxonFilter = useCallback((taxon: string) => {
+    setSelectedFacets(prev => ({
+      ...prev,
+      taxon: prev.taxon.filter(t => t !== taxon)
+    }));
+  }, []);
+
+  // Clear all taxon filters
+  const clearAllTaxonFilters = useCallback(() => {
+    setSelectedFacets(prev => ({ ...prev, taxon: [] }));
+  }, []);
+
+  // Handle taxon input keydown
+  const handleTaxonKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showTaxonDropdown && taxonSuggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedTaxonIndex(prev => 
+          prev < taxonSuggestions.length - 1 ? prev + 1 : prev
+        );
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedTaxonIndex(prev => prev > 0 ? prev - 1 : -1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (highlightedTaxonIndex >= 0 && taxonSuggestions[highlightedTaxonIndex]) {
+          addTaxonFromAutocomplete(taxonSuggestions[highlightedTaxonIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        setShowTaxonDropdown(false);
+      }
+    }
+  }, [showTaxonDropdown, taxonSuggestions, highlightedTaxonIndex, addTaxonFromAutocomplete]);
+
+  // Build all filters (preset + user-selected)
+  const buildFilters = useCallback((): string[] => {
+    const filters: string[] = [];
+    
+    // Build OR filter for taxon values (multiple taxa should match ANY of them)
+    if (selectedFacets.taxon.length > 0) {
+      const taxonValues = selectedFacets.taxon.map(t => `"${t}"`).join(' OR ');
+      filters.push(`scientific_name:(${taxonValues})`);
+    }
+    
+    // Build OR filter for collector values
+    if (selectedFacets.collector.length > 0) {
+      const collectorValues = selectedFacets.collector.map(c => `"${c}"`).join(' OR ');
+      filters.push(`collector:(${collectorValues})`);
+    }
+    
+    // Build OR filter for locality values
+    if (selectedFacets.locality.length > 0) {
+      const localityValues = selectedFacets.locality.map(l => `"${l}"`).join(' OR ');
+      filters.push(`locality:(${localityValues})`);
+    }
+    
+    return filters;
+  }, [selectedFacets]);
+
+  // Combined fetch function - gets both results and facets in one API call
+  const fetchResultsAndFacets = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const filters: string[] = [];
-      
-      // Add preset filters from IndexPage selections
-      presetFilters.taxon.forEach(taxon => {
-        filters.push(`scientificName:"${taxon}"`);
-      });
-      presetFilters.collector.forEach(collector => {
-        filters.push(`collector:"${collector}"`);
-      });
-      presetFilters.locality.forEach(locality => {
-        filters.push(`locality:"${locality}"`);
-      });
-      
-      // Add manual filters
-      if (selectedFamily) filters.push(`family:"${selectedFamily}"`);
-      if (selectedCountry) filters.push(`country:"${selectedCountry}"`);
-      if (selectedGenus) filters.push(`genus:"${selectedGenus}"`);
-
+      const filters = buildFilters();
       const start = (currentPage - 1) * resultsPerPage;
+      
       const response: SolrResponse = await searchRecords(
         query || '*:*',
         filters,
         start,
         resultsPerPage,
-        true
+        true // Include facets in the same call
       );
 
       setResults(response.response.docs);
       setTotalResults(response.response.numFound);
-      setFacets(response.facet_counts?.facet_fields);
+
+      // Parse and set facet options from the same response
+      if (response.facet_counts?.facet_fields) {
+        setFacetOptions({
+          taxon: response.facet_counts.facet_fields.taxon 
+            ? parseFacetArray(response.facet_counts.facet_fields.taxon)
+            : [],
+          collector: response.facet_counts.facet_fields.collector 
+            ? parseFacetArray(response.facet_counts.facet_fields.collector)
+            : [],
+          locality: response.facet_counts.facet_fields.locality 
+            ? parseFacetArray(response.facet_counts.facet_fields.locality)
+            : []
+        });
+      }
     } catch (err) {
       setError('Failed to fetch search results. Please try again.');
       console.error('Search error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [query, buildFilters, currentPage]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Single effect that fetches both results and facets
+  useEffect(() => {
+    fetchResultsAndFacets();
+  }, [fetchResultsAndFacets]);
+
+
+  const toggleFacetValue = (facetType: 'taxon' | 'collector' | 'locality', value: string) => {
+    setSelectedFacets(prev => {
+      const current = prev[facetType];
+      const exists = current.includes(value);
+      
+      return {
+        ...prev,
+        [facetType]: exists 
+          ? current.filter(v => v !== value)
+          : [...current, value]
+      };
+    });
     setCurrentPage(1);
-    performSearch();
   };
 
-  const clearFilters = () => {
-    setSelectedFamily('');
-    setSelectedCountry('');
-    setSelectedGenus('');
-    setPresetFilters({ taxon: [], collector: [], locality: [] });
+  const clearAllFilters = () => {
+    setSelectedFacets({ taxon: [], collector: [], locality: [] });
     setCurrentPage(1);
-  };
-
-  const removePresetFilter = (type: 'taxon' | 'collector' | 'locality', value: string) => {
-    setPresetFilters(prev => ({
-      ...prev,
-      [type]: prev[type].filter(v => v !== value)
-    }));
-  };
-
-  const clearPresetFilters = () => {
-    setPresetFilters({ taxon: [], collector: [], locality: [] });
-  };
-
-  const parseFacetArray = (facetArray: Array<string | number>): Array<{value: string, count: number}> => {
-    const result: Array<{value: string, count: number}> = [];
-    for (let i = 0; i < facetArray.length; i += 2) {
-      result.push({
-        value: facetArray[i] as string,
-        count: facetArray[i + 1] as number
-      });
-    }
-    return result;
   };
 
   const totalPages = Math.ceil(totalResults / resultsPerPage);
+
+  const hasActiveFilters = selectedFacets.taxon.length > 0 || 
+                           selectedFacets.collector.length > 0 || 
+                           selectedFacets.locality.length > 0;
 
   return (
     <div className="search-page">
@@ -133,73 +302,6 @@ const SearchPage: React.FC = () => {
       </div>
 
       <div className="container">
-        <form onSubmit={handleSearchSubmit} className="mb-4">
-          <div className="input-group">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search specimens..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <button className="btn btn-primary" type="submit">
-              Search
-            </button>
-          </div>
-        </form>
-
-        {/* Preset Filters Display */}
-        {(presetFilters.taxon.length > 0 || presetFilters.collector.length > 0 || presetFilters.locality.length > 0) && (
-          <div className="preset-filters mb-3 p-3 bg-light rounded">
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <strong>Preset Filters (from Index Page):</strong>
-              <button 
-                className="btn btn-sm btn-link text-decoration-none p-0"
-                onClick={clearPresetFilters}
-              >
-                Clear all preset filters
-              </button>
-            </div>
-            <div className="d-flex flex-wrap gap-2">
-              {presetFilters.taxon.map((taxon, index) => (
-                <span key={`taxon-${index}`} className="badge bg-success d-inline-flex align-items-center">
-                  taxon: {taxon}
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white ms-1 p-0"
-                    style={{ fontSize: '0.6rem', lineHeight: 1 }}
-                    onClick={() => removePresetFilter('taxon', taxon)}
-                    aria-label="Remove"
-                  />
-                </span>
-              ))}
-              {presetFilters.collector.map((collector, index) => (
-                <span key={`collector-${index}`} className="badge bg-warning d-inline-flex align-items-center">
-                  collector: {collector}
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white ms-1 p-0"
-                    style={{ fontSize: '0.6rem', lineHeight: 1 }}
-                    onClick={() => removePresetFilter('collector', collector)}
-                    aria-label="Remove"
-                  />
-                </span>
-              ))}
-              {presetFilters.locality.map((locality, index) => (
-                <span key={`locality-${index}`} className="badge bg-primary d-inline-flex align-items-center">
-                  locality: {locality}
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white ms-1 p-0"
-                    style={{ fontSize: '0.6rem', lineHeight: 1 }}
-                    onClick={() => removePresetFilter('locality', locality)}
-                    aria-label="Remove"
-                  />
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
 
         {error && (
           <div className="alert alert-danger" role="alert">
@@ -213,71 +315,179 @@ const SearchPage: React.FC = () => {
               <div className="card-body">
                 <h4 className="h6 mb-3">Filter Results</h4>
                 
-                <button
-                  className="btn btn-sm btn-outline-secondary w-100 mb-3"
-                  onClick={clearFilters}
-                >
-                  Clear All Filters
-                </button>
-
-                {/* Family Facet */}
-                <div className="facet-group">
-                  <h5>Family</h5>
-                  <select
-                    className="form-select form-select-sm"
-                    value={selectedFamily}
-                    onChange={(e) => {
-                      setSelectedFamily(e.target.value);
-                      setCurrentPage(1);
-                    }}
+                {hasActiveFilters && (
+                  <button
+                    className="btn btn-sm btn-outline-secondary w-100 mb-3"
+                    onClick={clearAllFilters}
                   >
-                    <option value="">All Families</option>
-                    {facets?.family && parseFacetArray(facets.family).map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.value} ({item.count})
-                      </option>
-                    ))}
-                  </select>
+                    Clear All Filters ({selectedFacets.taxon.length + selectedFacets.collector.length + selectedFacets.locality.length} selected)
+                  </button>
+                )}
+
+                {/* Taxon Facet */}
+                <div className="facet-group mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="h6 mb-0">Taxon</h5>
+                    {selectedFacets.taxon.length > 0 && (
+                      <span className="badge bg-success">{selectedFacets.taxon.length}</span>
+                    )}
+                  </div>
+                  
+                  {/* Taxon Autocomplete */}
+                  <div className="mb-3" ref={taxonDropdownRef}>
+                    <div className="input-group input-group-sm">
+                      <input
+                        ref={taxonInputRef}
+                        type="text"
+                        className="form-control"
+                        placeholder="Add taxon..."
+                        value={taxonQuery}
+                        onChange={(e) => setTaxonQuery(e.target.value)}
+                        onKeyDown={handleTaxonKeyDown}
+                        autoComplete="off"
+                      />
+                      {taxonLoading && (
+                        <span className="input-group-text">
+                          <span className="spinner-border spinner-border-sm" role="status" />
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Selected taxon tags */}
+                    {selectedFacets.taxon.length > 0 && (
+                      <div className="mt-2">
+                        {selectedFacets.taxon.map((taxon) => (
+                          <span
+                            key={`selected-taxon-${taxon}`}
+                            className="badge bg-success me-1 mb-1 d-inline-flex align-items-center"
+                          >
+                            <span>{taxon}</span>
+                            <button
+                              type="button"
+                              className="btn-close btn-close-white ms-1 p-0"
+                              style={{ fontSize: '0.6rem', lineHeight: 1 }}
+                              onClick={() => removeTaxonFilter(taxon)}
+                              aria-label="Remove"
+                            />
+                          </span>
+                        ))}
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-link text-decoration-none p-0 ms-2"
+                          onClick={clearAllTaxonFilters}
+                        >
+                          Clear all
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Suggestions dropdown */}
+                    {showTaxonDropdown && taxonSuggestions.length > 0 && (
+                      <ul className="list-group position-absolute z-index-1" style={{ maxWidth: '100%', zIndex: 1000 }}>
+                        {taxonSuggestions.map((suggestion, index) => (
+                          <li
+                            key={`suggestion-${suggestion.term}-${index}`}
+                            className={`list-group-item list-group-item-action cursor-pointer ${index === highlightedTaxonIndex ? 'active' : ''}`}
+                            onClick={() => addTaxonFromAutocomplete(suggestion)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <span dangerouslySetInnerHTML={{ __html: suggestion.term }} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  
+                  {/* Taxon facet list */}
+                  <div className="facet-list">
+                    {facetOptions.taxon.length > 0 ? (
+                      <div className="list-group list-group-flush">
+                        {facetOptions.taxon.map((item) => {
+                          const isSelected = selectedFacets.taxon.includes(item.value);
+                          return (
+                            <button
+                              key={`taxon-${item.value}`}
+                              className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${isSelected ? 'active' : ''}`}
+                              onClick={() => toggleFacetValue('taxon', item.value)}
+                            >
+                              <span className="text-truncate">{item.value}</span>
+                              <span className={`badge ${isSelected ? 'bg-light text-dark' : 'bg-secondary'}`}>
+                                {item.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-muted small mb-0">No taxon options available</p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Genus Facet */}
-                <div className="facet-group">
-                  <h5>Genus</h5>
-                  <select
-                    className="form-select form-select-sm"
-                    value={selectedGenus}
-                    onChange={(e) => {
-                      setSelectedGenus(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <option value="">All Genera</option>
-                    {facets?.genus && parseFacetArray(facets.genus).map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.value} ({item.count})
-                      </option>
-                    ))}
-                  </select>
+                {/* Collector Facet */}
+                <div className="facet-group mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="h6 mb-0">Collector</h5>
+                    {selectedFacets.collector.length > 0 && (
+                      <span className="badge bg-warning text-dark">{selectedFacets.collector.length}</span>
+                    )}
+                  </div>
+                  <div className="facet-list">
+                    {facetOptions.collector.length > 0 ? (
+                      <div className="list-group list-group-flush">
+                        {facetOptions.collector.map((item) => {
+                          const isSelected = selectedFacets.collector.includes(item.value);
+                          return (
+                            <button
+                              key={`collector-${item.value}`}
+                              className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${isSelected ? 'active' : ''}`}
+                              onClick={() => toggleFacetValue('collector', item.value)}
+                            >
+                              <span className="text-truncate">{item.value}</span>
+                              <span className={`badge ${isSelected ? 'bg-light text-dark' : 'bg-secondary'}`}>
+                                {item.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-muted small mb-0">No collector options available</p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Country Facet */}
-                <div className="facet-group">
-                  <h5>Country</h5>
-                  <select
-                    className="form-select form-select-sm"
-                    value={selectedCountry}
-                    onChange={(e) => {
-                      setSelectedCountry(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <option value="">All Countries</option>
-                    {facets?.country && parseFacetArray(facets.country).map((item) => (
-                      <option key={item.value} value={item.value}>
-                        {item.value} ({item.count})
-                      </option>
-                    ))}
-                  </select>
+                {/* Locality Facet */}
+                <div className="facet-group mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <h5 className="h6 mb-0">Locality</h5>
+                    {selectedFacets.locality.length > 0 && (
+                      <span className="badge bg-primary">{selectedFacets.locality.length}</span>
+                    )}
+                  </div>
+                  <div className="facet-list">
+                    {facetOptions.locality.length > 0 ? (
+                      <div className="list-group list-group-flush">
+                        {facetOptions.locality.map((item) => {
+                          const isSelected = selectedFacets.locality.includes(item.value);
+                          return (
+                            <button
+                              key={`locality-${item.value}`}
+                              className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${isSelected ? 'active' : ''}`}
+                              onClick={() => toggleFacetValue('locality', item.value)}
+                            >
+                              <span className="text-truncate">{item.value}</span>
+                              <span className={`badge ${isSelected ? 'bg-light text-dark' : 'bg-secondary'}`}>
+                                {item.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-muted small mb-0">No locality options available</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -292,11 +502,11 @@ const SearchPage: React.FC = () => {
               </div>
             ) : (
               <>
-                <div className="search-stats">
+                <div className="search-stats mb-3">
                   <strong>
                     {totalResults} result{totalResults !== 1 ? 's' : ''} found
                   </strong>
-                  {(selectedFamily || selectedCountry || selectedGenus || presetFilters.taxon.length > 0 || presetFilters.collector.length > 0 || presetFilters.locality.length > 0) && (
+                  {hasActiveFilters && (
                     <span className="ms-2 text-muted">(filtered)</span>
                   )}
                 </div>
@@ -309,7 +519,7 @@ const SearchPage: React.FC = () => {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                      <nav aria-label="Search results pagination">
+                      <nav aria-label="Search results pagination" className="mt-4">
                         <ul className="pagination justify-content-center">
                           <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                             <button
