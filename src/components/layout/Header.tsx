@@ -9,7 +9,7 @@ const Header: React.FC = () => {
       <div className="container">
         <nav className="navbar navbar-expand-lg">
           <Link className="navbar-brand" to="/">
-            Herbarium Search
+            HerbCol
           </Link>
           <button
             className="navbar-toggler"
@@ -24,22 +24,15 @@ const Header: React.FC = () => {
           </button>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav ms-auto">
-              <li className="nav-item">
-                <Link
-                  className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-                  to="/"
-                >
-                  Home
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link
-                  className={`nav-link ${location.pathname === '/search' ? 'active' : ''}`}
-                  to="/search"
-                >
-                  Advanced Search
-                </Link>
-              </li>
+              {/*<li className="nav-item">*/}
+              {/*  <Link*/}
+              {/*    className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}*/}
+              {/*    to="/"*/}
+              {/*  >*/}
+              {/*    Home*/}
+              {/*  </Link>*/}
+              {/*</li>*/}
+
             </ul>
           </div>
         </nav>

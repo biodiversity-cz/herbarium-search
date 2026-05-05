@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SearchBox } from '@components/search/SearchBox';
 
 const IndexPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query)}`);
     } else {
       navigate('/search');
     }
@@ -18,40 +17,13 @@ const IndexPage: React.FC = () => {
     <div className="index-page">
       <div className="container">
         <div className="index-content">
-          <h1>Herbarium Repository</h1>
           <p className="lead">
-            Search through our comprehensive collection of herbarium specimens
+            Czech Repository of Herbarium Specimen Images: search through our comprehensive collection of digitalised herbarium specimens
           </p>
-          
-          <form onSubmit={handleSearch} className="search-box mt-4">
-            <div className="input-group input-group-lg mb-3">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search by scientific name, family, collector..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search herbarium specimens"
-              />
-            </div>
-            <div className="d-flex gap-2 justify-content-center">
-              <button type="submit" className="btn btn-primary btn-lg">
-                Search
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-lg"
-                onClick={() => navigate('/search')}
-              >
-                Advanced Search
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-5">
+          <SearchBox onSubmit={handleSearch} />
+           <div className="mt-5">
             <p className="text-muted">
-              <strong>Quick Tips:</strong> Use scientific names for best results. 
-              Try searching for families like "Asteraceae" or "Fagaceae".
+              <strong>Quick Tip:</strong> Start typing. You can add multiple suggestions by selecting from the autocomplete dropdown.
             </p>
           </div>
         </div>

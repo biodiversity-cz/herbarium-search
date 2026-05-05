@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRecordById } from '@services/api';
-import { HerbariumRecord } from '@types/index';
+import { HerbariumRecord } from '@types';
 
 const DetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HerbariumRecord } from '@types/index';
+import { HerbariumRecord } from '@types';
 
 interface ResultCardProps {
   record: HerbariumRecord;

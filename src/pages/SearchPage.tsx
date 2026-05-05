@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { searchRecords } from '@services/api';
-import { HerbariumRecord, SolrResponse } from '@types/index';
+import { HerbariumRecord, SolrResponse } from '@types';
 import ResultCard from '@components/search/CustomReactiveList';
 
 const SearchPage: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [results, setResults] = useState<HerbariumRecord[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(false);

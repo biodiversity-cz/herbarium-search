@@ -71,3 +71,41 @@ export interface FacetConfig {
   showCount?: boolean;
   size?: number;
 }
+
+/**
+ * Solr Suggestion Response
+ */
+export interface SuggestSuggestion {
+  term: string;
+  weight: number;
+  payload: string;
+}
+
+export interface SuggestDictionaryResult {
+  [query: string]: {
+    numFound: number;
+    suggestions: SuggestSuggestion[];
+  };
+}
+
+export interface SuggesterResponse {
+  responseHeader: {
+    status: number;
+    QTime: number;
+  };
+  suggest: {
+    creatorSuggest?: SuggestDictionaryResult;
+    localitySuggest?: SuggestDictionaryResult;
+    taxonSuggest?: SuggestDictionaryResult;
+  };
+}
+
+/**
+ * Selected Suggestion with prefix type
+ */
+export interface SelectedSuggestion {
+  id: string;
+  label: string;
+  type: 'taxon' | 'collector' | 'locality';
+  value: string;
+}
