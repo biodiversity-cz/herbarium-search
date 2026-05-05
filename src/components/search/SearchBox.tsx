@@ -1,10 +1,12 @@
 import React from 'react';
-import { useAutocomplete } from '@hooks/useAutocomplete';
+import { useAutocomplete, SuggestionOption } from '@hooks/useAutocomplete';
 import { SelectedSuggestionsTags } from './SelectedSuggestionsTags';
 import { SuggestionsDropdown } from './SuggestionsDropdown';
 
+export type { SuggestionOption };
+
 interface SearchBoxProps {
-  onSubmit?: (query: string) => void;
+  onSubmit?: (query: string, selectedSuggestions: SuggestionOption[]) => void;
 }
 
 export const SearchBox: React.FC<SearchBoxProps> = ({ onSubmit }) => {
@@ -27,7 +29,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSubmit }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSubmit) {
-      onSubmit(searchQuery);
+      onSubmit(searchQuery, selectedSuggestions);
     }
   };
 

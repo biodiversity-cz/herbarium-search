@@ -14,13 +14,33 @@ const SearchPage: React.FC = () => {
   const [selectedFamily, setSelectedFamily] = useState<string>('');
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedGenus, setSelectedGenus] = useState<string>('');
+  const [presetFilters, setPresetFilters] = useState<{taxon: string[], collector: string[], locality: string[]}>({
+    taxon: [],
+    collector: [],
+    locality: []
+  });
   const [facets, setFacets] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const resultsPerPage = 10;
 
+  // Initialize preset filters from URL parameters on mount
+  useEffect(() => {
+    const taxons = searchParams.getAll('taxon');
+    const collectors = searchParams.getAll('collector');
+    const localities = searchParams.getAll('locality');
+    
+    if (taxons.length > 0 || collectors.length > 0 || localities.length > 0) {
+      setPresetFilters({
+        taxon: taxons,
+        collector: collectors,
+        locality: localities
+      });
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     performSearch();
-  }, [query, selectedFamily, selectedCountry, selectedGenus, currentPage]);
+  }, [query, selectedFamily, selectedCountry, selectedGenus, currentPage, presetFilters]);
 
   const performSearch = async () => {
     setLoading(true);
@@ -28,6 +48,19 @@ const SearchPage: React.FC = () => {
 
     try {
       const filters: string[] = [];
+      
+      // Add preset filters from IndexPage selections
+      presetFilters.taxon.forEach(taxon => {
+        filters.push(`scientificName:"${taxon}"`);
+      });
+      presetFilters.collector.forEach(collector => {
+        filters.push(`collector:"${collector}"`);
+      });
+      presetFilters.locality.forEach(locality => {
+        filters.push(`locality:"${locality}"`);
+      });
+      
+      // Add manual filters
       if (selectedFamily) filters.push(`family:"${selectedFamily}"`);
       if (selectedCountry) filters.push(`country:"${selectedCountry}"`);
       if (selectedGenus) filters.push(`genus:"${selectedGenus}"`);
@@ -62,7 +95,19 @@ const SearchPage: React.FC = () => {
     setSelectedFamily('');
     setSelectedCountry('');
     setSelectedGenus('');
+    setPresetFilters({ taxon: [], collector: [], locality: [] });
     setCurrentPage(1);
+  };
+
+  const removePresetFilter = (type: 'taxon' | 'collector' | 'locality', value: string) => {
+    setPresetFilters(prev => ({
+      ...prev,
+      [type]: prev[type].filter(v => v !== value)
+    }));
+  };
+
+  const clearPresetFilters = () => {
+    setPresetFilters({ taxon: [], collector: [], locality: [] });
   };
 
   const parseFacetArray = (facetArray: Array<string | number>): Array<{value: string, count: number}> => {
@@ -102,6 +147,59 @@ const SearchPage: React.FC = () => {
             </button>
           </div>
         </form>
+
+        {/* Preset Filters Display */}
+        {(presetFilters.taxon.length > 0 || presetFilters.collector.length > 0 || presetFilters.locality.length > 0) && (
+          <div className="preset-filters mb-3 p-3 bg-light rounded">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <strong>Preset Filters (from Index Page):</strong>
+              <button 
+                className="btn btn-sm btn-link text-decoration-none p-0"
+                onClick={clearPresetFilters}
+              >
+                Clear all preset filters
+              </button>
+            </div>
+            <div className="d-flex flex-wrap gap-2">
+              {presetFilters.taxon.map((taxon, index) => (
+                <span key={`taxon-${index}`} className="badge bg-success d-inline-flex align-items-center">
+                  taxon: {taxon}
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white ms-1 p-0"
+                    style={{ fontSize: '0.6rem', lineHeight: 1 }}
+                    onClick={() => removePresetFilter('taxon', taxon)}
+                    aria-label="Remove"
+                  />
+                </span>
+              ))}
+              {presetFilters.collector.map((collector, index) => (
+                <span key={`collector-${index}`} className="badge bg-warning d-inline-flex align-items-center">
+                  collector: {collector}
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white ms-1 p-0"
+                    style={{ fontSize: '0.6rem', lineHeight: 1 }}
+                    onClick={() => removePresetFilter('collector', collector)}
+                    aria-label="Remove"
+                  />
+                </span>
+              ))}
+              {presetFilters.locality.map((locality, index) => (
+                <span key={`locality-${index}`} className="badge bg-primary d-inline-flex align-items-center">
+                  locality: {locality}
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white ms-1 p-0"
+                    style={{ fontSize: '0.6rem', lineHeight: 1 }}
+                    onClick={() => removePresetFilter('locality', locality)}
+                    aria-label="Remove"
+                  />
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="alert alert-danger" role="alert">
@@ -198,7 +296,7 @@ const SearchPage: React.FC = () => {
                   <strong>
                     {totalResults} result{totalResults !== 1 ? 's' : ''} found
                   </strong>
-                  {(selectedFamily || selectedCountry || selectedGenus) && (
+                  {(selectedFamily || selectedCountry || selectedGenus || presetFilters.taxon.length > 0 || presetFilters.collector.length > 0 || presetFilters.locality.length > 0) && (
                     <span className="ms-2 text-muted">(filtered)</span>
                   )}
                 </div>
