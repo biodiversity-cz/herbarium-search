@@ -22,10 +22,6 @@ cd herbarium-search
 npm install
 ```
 
-3. Start the mock backend (in one terminal):
-```bash
-npm run mock-server
-```
 
 4. Start the development server (in another terminal):
 ```bash
@@ -39,8 +35,7 @@ npm run dev
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run mock-server` - Start mock backend API
+- `npm run lint` - Run ESLint 
 
 ## Project Structure
 
@@ -50,8 +45,7 @@ src/
 ├── pages/          # Page components
 ├── services/       # API services
 ├── types/          # TypeScript types
-├── styles/         # SASS styles
-├── mock-backend/   # Mock API server
+├── styles/         # SASS styles 
 └── App.tsx         # Main app component
 ```
 
@@ -65,22 +59,11 @@ For detailed project structure, see [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.m
 - **React Router** - Routing
 - **Bootstrap 5** - Styling (SASS)
 - **Axios** - HTTP client
-
-## Mock Backend
-
-The project includes a mock Express backend that simulates Solr-style responses. This allows frontend development and testing without a real backend.
-
-### Mock API Endpoints
-
-- `GET /api/solr/search` - Search specimens
-- `GET /api/records/:id` - Get specimen details
-- `GET /api/health` - Health check
+ 
 
 ## Development Notes
 
-- The mock backend runs on port **3001**
 - The frontend dev server runs on port **3000**
-- Vite proxies `/api/*` requests to the mock backend
 - Path aliases are configured for cleaner imports (e.g., `@components`, `@pages`)
 
 ## Building for Production

@@ -17,6 +17,13 @@ export default defineConfig({
       '@styles': path.resolve(__dirname, './src/styles'),
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        silenceDeprecations: ['import', 'if-function', 'color-functions', 'global-builtin'],
+      },
+    },
+  },
   server: {
     port: 3000,
     proxy: {
