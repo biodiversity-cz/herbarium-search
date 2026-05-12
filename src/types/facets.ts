@@ -1,48 +1,50 @@
 /**
  * Facet model – designed for easy extensibility.
  *
- * To add a new facet (e.g. institution, altitude range, date range):
+ * To add a new facet:
  *  1. Add a key to FacetKey
  *  2. Add the corresponding entry to FACET_CONFIG
- *  3. Add the key to SelectedFacetValues (with appropriate value type)
- *  4. The FacetSidebar will automatically render it via the registry
+ *  3. The FacetSidebar will automatically render it via the registry
+ *
+ * To add a new facet TYPE (e.g. numericRange):
+ *  1. Add a new *FacetConfig interface
+ *  2. Add it to the FacetConfig union
+ *  3. Add a new panel component in src/components/search/facets/
+ *  4. Add a one-line `if` in FacetSidebar.tsx
  */
 
 // ─── Facet keys ───────────────────────────────────────────────────────────────
 
-/** All supported facet identifiers. Extend this union to add new facets. */
 export type FacetKey =
   | 'taxon'
   | 'collector'
   | 'locality'
-  // Preliminary – will be wired up when Solr fields are ready:
+  | 'genus'
   | 'family'
   | 'country'
+  | 'herbarium'
+  | 'previousIdentifications'
+  | 'catalogNumber'
   | 'institution'
-  // Future range facets:
+  | 'collectionDate'
   | 'year'
   | 'altitude';
 
-/** Facet types that determine how the UI renders and how filters are built */
 export type FacetType = 'terms' | 'dateRange' | 'numericRange';
 
-// ─── Facet configuration registry ────────────────────────────────────────────
+// ─── Facet configuration interfaces ──────────────────────────────────────────
 
 export interface TermsFacetConfig {
   key: FacetKey;
   type: 'terms';
   label: string;
-  /** Solr field used in fq filter expressions */
+  /** Solr field used in fq filter expressions (text_general for case-insensitive match) */
   filterField: string;
-  /** Solr field used in facet.field requests (must be docValues=true) */
+  /** Solr field used in facet.field requests (must be docValues=true, StrField) */
   facetField: string;
-  /** Whether to show an autocomplete input above the facet list */
   hasAutocomplete: boolean;
-  /** Solr suggester name used for autocomplete (if hasAutocomplete=true) */
   suggesterKey?: 'taxonSuggest' | 'creatorSuggest' | 'localitySuggest';
-  /** Max facet values to request from Solr */
   facetLimit?: number;
-  /** Badge colour class (Bootstrap) */
   badgeClass: string;
   enabled: boolean;
 }
@@ -51,9 +53,17 @@ export interface DateRangeFacetConfig {
   key: FacetKey;
   type: 'dateRange';
   label: string;
+  /** Solr pdate field used in range queries */
   filterField: string;
+  /** Solr pdate field used in facet.range requests (must be docValues=true) */
   facetField: string;
   hasAutocomplete: false;
+  /** Solr facet.range.start (ISO date string) */
+  rangeStart: string;
+  /** Solr facet.range.end (ISO date string) */
+  rangeEnd: string;
+  /** Solr facet.range.gap (e.g. '+10YEAR', '+1YEAR') */
+  rangeGap: string;
   badgeClass: string;
   enabled: boolean;
 }
@@ -75,27 +85,24 @@ export interface NumericRangeFacetConfig {
 
 export type FacetConfig = TermsFacetConfig | DateRangeFacetConfig | NumericRangeFacetConfig;
 
+// ─── Central facet registry ───────────────────────────────────────────────────
+
 /**
- * Central facet registry.
+ * FACET_CONFIG is the single place to add/remove/configure facets.
  * Order here determines render order in the sidebar.
  *
- * NOTE on Solr fields:
- *  - taxon/collector/locality:
- *      filterField  → text_general field (tokenized + lowercased) so that
- *                     case-insensitive phrase matching works correctly.
- *      facetField   → *_facet copy-field (StrField + docValues=true) used
- *                     only for facet counts (requires re-index).
- *  - family/country/institution already have docValues=true in the schema.
- *  - year/altitude are future range facets (event_date_from, altitude fields TBD).
+ * filterField vs facetField:
+ *  - filterField: text_general (tokenized, lowercased) → case-insensitive fq phrase match
+ *  - facetField:  StrField + docValues=true → exact bucket counts
+ *  These must NOT be swapped (see docs/gotchas.md #7).
  */
 export const FACET_CONFIG: FacetConfig[] = [
+  // ── Primary search facets (with autocomplete) ──────────────────────────────
   {
     key: 'taxon',
     type: 'terms',
     label: 'Taxon',
-    // Use text_general for filtering (case-insensitive phrase match)
     filterField: 'scientific_name',
-    // Use StrField copy-field for facet counts (docValues=true)
     facetField: 'scientific_name_facet',
     hasAutocomplete: true,
     suggesterKey: 'taxonSuggest',
@@ -127,6 +134,20 @@ export const FACET_CONFIG: FacetConfig[] = [
     badgeClass: 'bg-locality',
     enabled: true,
   },
+
+  // ── Taxonomy ───────────────────────────────────────────────────────────────
+  {
+    key: 'genus',
+    type: 'terms',
+    label: 'Genus',
+    // genus is already a StrField with docValues=true → can use directly for both
+    filterField: 'genus',
+    facetField: 'genus',
+    hasAutocomplete: false,
+    facetLimit: 50,
+    badgeClass: 'bg-secondary',
+    enabled: true,
+  },
   {
     key: 'family',
     type: 'terms',
@@ -139,6 +160,21 @@ export const FACET_CONFIG: FacetConfig[] = [
     enabled: true,
   },
   {
+    key: 'previousIdentifications',
+    type: 'terms',
+    label: 'Previous identifications',
+    // previous_identifications is text_general → use for filter
+    filterField: 'previous_identifications',
+    // previous_identifications_facet is StrField + docValues → use for counts
+    facetField: 'previous_identifications_facet',
+    hasAutocomplete: false,
+    facetLimit: 30,
+    badgeClass: 'bg-secondary',
+    enabled: true,
+  },
+
+  // ── Geography ──────────────────────────────────────────────────────────────
+  {
     key: 'country',
     type: 'terms',
     label: 'Country',
@@ -149,28 +185,72 @@ export const FACET_CONFIG: FacetConfig[] = [
     badgeClass: 'bg-secondary',
     enabled: true,
   },
-  // ── Preliminary – enable when Solr field is ready ──────────────────────────
+
+  // ── Institution / collection ───────────────────────────────────────────────
   {
-    key: 'institution',
+    key: 'herbarium',
     type: 'terms',
-    label: 'Institution',
+    label: 'Herbarium',
     filterField: 'herbarium_acronym_facet',
     facetField: 'herbarium_acronym_facet',
     hasAutocomplete: false,
     facetLimit: 30,
     badgeClass: 'bg-secondary',
-    enabled: false, // flip to true after re-index
+    enabled: true,
   },
-  // ── Future range facets ────────────────────────────────────────────────────
   {
-    key: 'year',
+    key: 'catalogNumber',
+    type: 'terms',
+    label: 'Catalog number',
+    // catalog_number is StrField (no docValues) → use for filter
+    filterField: 'catalog_number',
+    // catalog_number_facet is StrField + docValues → use for counts
+    facetField: 'catalog_number_facet',
+    hasAutocomplete: false,
+    facetLimit: 30,
+    badgeClass: 'bg-secondary',
+    enabled: true,
+  },
+
+  // ── Date range ─────────────────────────────────────────────────────────────
+  {
+    key: 'collectionDate',
     type: 'dateRange',
-    label: 'Collection year',
+    label: 'Collection date',
     filterField: 'event_date_from',
     facetField: 'event_date_from',
     hasAutocomplete: false,
+    rangeStart: '1700-01-01T00:00:00Z',
+    rangeEnd: '2026-01-01T00:00:00Z',
+    rangeGap: '+10YEAR',
     badgeClass: 'bg-secondary',
-    enabled: false, // enable when UI is built
+    enabled: true,
+  },
+
+  // ── Preliminary / future ───────────────────────────────────────────────────
+  {
+    key: 'institution',
+    type: 'terms',
+    label: 'Institution (full name)',
+    filterField: 'herbarium_acronym_facet',
+    facetField: 'herbarium_acronym_facet',
+    hasAutocomplete: false,
+    facetLimit: 30,
+    badgeClass: 'bg-secondary',
+    enabled: false,
+  },
+  {
+    key: 'year',
+    type: 'dateRange',
+    label: 'Collection year (1-year buckets)',
+    filterField: 'event_date_from',
+    facetField: 'event_date_from',
+    hasAutocomplete: false,
+    rangeStart: '1700-01-01T00:00:00Z',
+    rangeEnd: '2026-01-01T00:00:00Z',
+    rangeGap: '+1YEAR',
+    badgeClass: 'bg-secondary',
+    enabled: false,
   },
   {
     key: 'altitude',
@@ -184,28 +264,38 @@ export const FACET_CONFIG: FacetConfig[] = [
     step: 100,
     unit: 'm',
     badgeClass: 'bg-secondary',
-    enabled: false, // enable when Solr field exists
+    enabled: false,
   },
 ];
 
-/** Convenience lookup: config by key */
 export const FACET_CONFIG_MAP: Record<string, FacetConfig> = Object.fromEntries(
   FACET_CONFIG.map((c) => [c.key, c])
 );
 
 // ─── Runtime facet state ──────────────────────────────────────────────────────
 
-/** One facet bucket returned by Solr */
 export interface FacetBucket {
   value: string;
   count: number;
 }
 
-/** Selected values per facet key (terms facets use string[]) */
+/** Date range selection: { from: '1900', to: '1950' } (year strings) */
+export interface DateRangeSelection {
+  from?: string;
+  to?: string;
+}
+
+/** Selected values per facet key */
 export type SelectedFacetValues = Partial<Record<FacetKey, string[]>>;
 
-/** Available buckets per facet key */
+/** Selected date ranges per facet key */
+export type SelectedDateRanges = Partial<Record<FacetKey, DateRangeSelection>>;
+
+/** Available term buckets per facet key */
 export type FacetBuckets = Partial<Record<FacetKey, FacetBucket[]>>;
+
+/** Available range buckets per facet key */
+export type RangeBuckets = Partial<Record<FacetKey, FacetBucket[]>>;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -220,29 +310,62 @@ export const parseFacetArray = (arr: Array<string | number>): FacetBucket[] => {
   return result;
 };
 
-/** Build Solr fq filter strings from selected facet values */
-export const buildFqFilters = (selected: SelectedFacetValues): string[] => {
+/** Parse the flat Solr facet_ranges counts array into FacetBucket[] */
+export const parseRangeArray = (arr: Array<string | number>): FacetBucket[] => {
+  const result: FacetBucket[] = [];
+  for (let i = 0; i + 1 < arr.length; i += 2) {
+    const isoDate = arr[i] as string;
+    const count = arr[i + 1] as number;
+    if (count > 0) {
+      // Extract year from ISO date string
+      const year = isoDate.substring(0, 4);
+      result.push({ value: year, count });
+    }
+  }
+  return result;
+};
+
+/** Build Solr fq filter strings from selected term facet values */
+export const buildFqFilters = (
+  selected: SelectedFacetValues,
+  dateRanges: SelectedDateRanges = {}
+): string[] => {
   const filters: string[] = [];
 
   for (const cfg of FACET_CONFIG) {
     if (!cfg.enabled) continue;
-    const values = selected[cfg.key];
-    if (!values || values.length === 0) continue;
 
     if (cfg.type === 'terms') {
+      const values = selected[cfg.key];
+      if (!values || values.length === 0) continue;
       const quoted = values.map((v) => `"${v}"`).join(' OR ');
       filters.push(`${cfg.filterField}:(${quoted})`);
     }
-    // dateRange / numericRange filters will be added here when implemented
+
+    if (cfg.type === 'dateRange') {
+      const range = dateRanges[cfg.key];
+      if (!range || (!range.from && !range.to)) continue;
+      const from = range.from ? `${range.from}-01-01T00:00:00Z` : '*';
+      const to = range.to ? `${range.to}-12-31T23:59:59Z` : '*';
+      filters.push(`${cfg.filterField}:[${from} TO ${to}]`);
+    }
   }
 
   return filters;
 };
 
-/** Total count of all active filter values */
-export const countActiveFilters = (selected: SelectedFacetValues): number =>
-  Object.values(selected).reduce((sum, vals) => sum + (vals?.length ?? 0), 0);
+export const countActiveFilters = (
+  selected: SelectedFacetValues,
+  dateRanges: SelectedDateRanges = {}
+): number => {
+  const termCount = Object.values(selected).reduce((sum, vals) => sum + (vals?.length ?? 0), 0);
+  const rangeCount = Object.values(dateRanges).filter(
+    (r) => r && (r.from || r.to)
+  ).length;
+  return termCount + rangeCount;
+};
 
-/** Returns true if any facet has a selection */
-export const hasActiveFilters = (selected: SelectedFacetValues): boolean =>
-  countActiveFilters(selected) > 0;
+export const hasActiveFilters = (
+  selected: SelectedFacetValues,
+  dateRanges: SelectedDateRanges = {}
+): boolean => countActiveFilters(selected, dateRanges) > 0;

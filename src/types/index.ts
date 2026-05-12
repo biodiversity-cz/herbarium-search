@@ -58,6 +58,13 @@ export const asArray = (field: string | string[] | undefined): string[] => {
   return Array.isArray(field) ? field : [field];
 };
 
+/** One bucket in a Solr facet.range response */
+export interface SolrRangeBucket {
+  /** ISO date string (start of the range bucket) */
+  start: string;
+  count: number;
+}
+
 /**
  * Solr Search Response
  */
@@ -75,6 +82,12 @@ export interface SolrResponse {
   facet_counts?: {
     facet_fields?: Record<string, Array<string | number>>;
     facet_queries?: Record<string, number>;
+    facet_ranges?: Record<string, {
+      counts: Array<string | number>;
+      gap: string;
+      start: string;
+      end: string;
+    }>;
   };
 }
 
@@ -93,9 +106,13 @@ export interface FacetData {
     docs: HerbariumRecord[];
   };
   facet_counts: {
-    facet_fields: {
-      [field: string]: Array<string | number>;
-    };
+    facet_fields: Record<string, Array<string | number>>;
+    facet_ranges?: Record<string, {
+      counts: Array<string | number>;
+      gap: string;
+      start: string;
+      end: string;
+    }>;
   };
 }
 

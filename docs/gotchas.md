@@ -82,7 +82,22 @@ paramsSerializer: {
 
 ---
 
-## 7. `buildFacetParams` uses `facetField`, `buildFqFilters` uses `filterField`
+## 7. `facet.range` params must be sent as parallel arrays
+
+When multiple date range facets are enabled, Solr expects the `facet.range`, `facet.range.start`, `facet.range.end`, and `facet.range.gap` params to be repeated in the same order:
+
+```
+facet.range=event_date_from
+facet.range.start=1700-01-01T00:00:00Z
+facet.range.end=2026-01-01T00:00:00Z
+facet.range.gap=+10YEAR
+```
+
+`buildFacetParams` in `api.ts` builds four parallel arrays and the custom `paramsSerializer` repeats each key without brackets. The order of entries in `FACET_CONFIG` determines the order of the arrays — they must stay in sync.
+
+---
+
+## 8. `buildFacetParams` uses `facetField`, `buildFqFilters` uses `filterField`
 
 These are intentionally different fields in `FACET_CONFIG`:
 
@@ -95,7 +110,7 @@ Do not swap them. Using `filterField` for facet counts will fail (no docValues).
 
 ---
 
-## 8. IndexPage persistence uses `sessionStorage`, SearchPage uses URL
+## 9. IndexPage persistence uses `sessionStorage`, SearchPage uses URL
 
 - **IndexPage** (`useAutocomplete` with `persist: true`): selected suggestions (taxon/collector/locality) are saved to `sessionStorage` under key `herbarium_search_state`. This survives page refresh but is cleared when the browser tab is closed.
 - **SearchPage** (`useSearchState`): all filter state lives in the URL (`?taxon=&collector=&locality=&page=`). F5 restores the exact filter state. Removing a filter removes it from the URL immediately.
@@ -104,7 +119,7 @@ These two mechanisms are independent. When the user navigates from IndexPage to 
 
 ---
 
-## 9. Solr suggester keys are case-sensitive
+## 10. Solr suggester keys are case-sensitive
 
 The three suggesters are named exactly: `taxonSuggest`, `creatorSuggest`, `localitySuggest`. These names appear in:
 - `solrconfig.xml` (`<str name="name">`)
@@ -116,6 +131,6 @@ If you rename a suggester in Solr, update all four locations.
 
 ---
 
-## 10. `npm run build` must pass before committing
+## 11. `npm run build` must pass before committing
 
 The build runs `tsc` (TypeScript type-check) then `vite build`. TypeScript errors are fatal. The CSS timing warning from `vite:css` is informational only and can be ignored.

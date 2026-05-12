@@ -2,20 +2,29 @@ import React from 'react';
 import {
   FACET_CONFIG,
   FacetBuckets,
+  RangeBuckets,
   SelectedFacetValues,
+  SelectedDateRanges,
+  DateRangeSelection,
   FacetKey,
   countActiveFilters,
   hasActiveFilters,
   TermsFacetConfig,
+  DateRangeFacetConfig,
 } from '@/types/facets';
 import TermsFacetPanel from './TermsFacetPanel';
+import DateRangeFacetPanel from './DateRangeFacetPanel';
 
 interface FacetSidebarProps {
   selectedFacets: SelectedFacetValues;
+  selectedDateRanges: SelectedDateRanges;
   facetBuckets: FacetBuckets;
+  rangeBuckets: RangeBuckets;
   onAdd: (key: FacetKey, value: string) => void;
   onRemove: (key: FacetKey, value: string) => void;
   onClearFacet: (key: FacetKey) => void;
+  onDateRangeChange: (key: FacetKey, range: DateRangeSelection) => void;
+  onDateRangeClear: (key: FacetKey) => void;
   onClearAll: () => void;
 }
 
@@ -25,15 +34,18 @@ interface FacetSidebarProps {
  */
 const FacetSidebar: React.FC<FacetSidebarProps> = ({
   selectedFacets,
+  selectedDateRanges,
   facetBuckets,
+  rangeBuckets,
   onAdd,
   onRemove,
   onClearFacet,
+  onDateRangeChange,
+  onDateRangeClear,
   onClearAll,
 }) => {
-  const totalActive = countActiveFilters(selectedFacets);
-  const anyActive = hasActiveFilters(selectedFacets);
-
+  const totalActive = countActiveFilters(selectedFacets, selectedDateRanges);
+  const anyActive = hasActiveFilters(selectedFacets, selectedDateRanges);
   const enabledFacets = FACET_CONFIG.filter((c) => c.enabled);
 
   return (
@@ -55,16 +67,13 @@ const FacetSidebar: React.FC<FacetSidebarProps> = ({
           </div>
 
           {enabledFacets.map((cfg) => {
-            const selected = selectedFacets[cfg.key] ?? [];
-            const buckets = facetBuckets[cfg.key] ?? [];
-
             if (cfg.type === 'terms') {
               return (
                 <TermsFacetPanel
                   key={cfg.key}
                   config={cfg as TermsFacetConfig}
-                  selectedValues={selected}
-                  buckets={buckets}
+                  selectedValues={selectedFacets[cfg.key] ?? []}
+                  buckets={facetBuckets[cfg.key] ?? []}
                   onAdd={(val) => onAdd(cfg.key, val)}
                   onRemove={(val) => onRemove(cfg.key, val)}
                   onClearAll={() => onClearFacet(cfg.key)}
@@ -72,10 +81,20 @@ const FacetSidebar: React.FC<FacetSidebarProps> = ({
               );
             }
 
-            // Placeholder for future range facets
-            // if (cfg.type === 'dateRange') return <DateRangeFacetPanel key={cfg.key} ... />;
-            // if (cfg.type === 'numericRange') return <NumericRangeFacetPanel key={cfg.key} ... />;
+            if (cfg.type === 'dateRange') {
+              return (
+                <DateRangeFacetPanel
+                  key={cfg.key}
+                  config={cfg as DateRangeFacetConfig}
+                  selection={selectedDateRanges[cfg.key] ?? {}}
+                  buckets={rangeBuckets[cfg.key] ?? []}
+                  onChange={(range) => onDateRangeChange(cfg.key, range)}
+                  onClear={() => onDateRangeClear(cfg.key)}
+                />
+              );
+            }
 
+            // numericRange: placeholder for future implementation
             return null;
           })}
         </div>

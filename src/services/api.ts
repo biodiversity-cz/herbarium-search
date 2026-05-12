@@ -34,21 +34,46 @@ const solrAxios = axios.create({
 
 /**
  * Build the facet params for all enabled facets.
- * Returns facet.field as an array; the custom serializer will repeat it
- * as: facet.field=scientific_name_facet&facet.field=creator_facet&...
+ * - Terms facets → facet.field (repeated array)
+ * - Date range facets → facet.range + facet.range.start/end/gap (repeated arrays)
+ *
+ * The custom paramsSerializer repeats array values without [] brackets,
+ * which is what Solr expects.
  */
 const buildFacetParams = (facetLimit = 50): Record<string, unknown> => {
   const facetFields: string[] = [];
+  const facetRanges: string[] = [];
+  const rangeStarts: string[] = [];
+  const rangeEnds: string[] = [];
+  const rangeGaps: string[] = [];
+
   for (const cfg of FACET_CONFIG) {
-    if (!cfg.enabled || cfg.type !== 'terms') continue;
-    facetFields.push(cfg.facetField);
+    if (!cfg.enabled) continue;
+    if (cfg.type === 'terms') {
+      facetFields.push(cfg.facetField);
+    } else if (cfg.type === 'dateRange') {
+      facetRanges.push(cfg.facetField);
+      rangeStarts.push(cfg.rangeStart);
+      rangeEnds.push(cfg.rangeEnd);
+      rangeGaps.push(cfg.rangeGap);
+    }
   }
-  return {
+
+  const params: Record<string, unknown> = {
     facet: 'true',
-    'facet.field': facetFields,
     'facet.limit': facetLimit,
     'facet.mincount': 1,
   };
+
+  if (facetFields.length > 0) params['facet.field'] = facetFields;
+  if (facetRanges.length > 0) {
+    params['facet.range'] = facetRanges;
+    params['facet.range.start'] = rangeStarts;
+    params['facet.range.end'] = rangeEnds;
+    params['facet.range.gap'] = rangeGaps;
+  }
+
+  return params;
 };
 
 /**

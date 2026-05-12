@@ -29,11 +29,15 @@ const SearchPage: React.FC = () => {
     totalPages,
     query,
     selectedFacets,
+    selectedDateRanges,
     facetBuckets,
+    rangeBuckets,
     anyActiveFilters,
     addFacetValue,
     removeFacetValue,
     clearFacet,
+    setDateRange,
+    clearDateRange,
     clearAllFacets,
     setPage,
   } = useSearchState();
@@ -50,10 +54,14 @@ const SearchPage: React.FC = () => {
         <div className="search-layout">
           <FacetSidebar
             selectedFacets={selectedFacets}
+            selectedDateRanges={selectedDateRanges}
             facetBuckets={facetBuckets}
+            rangeBuckets={rangeBuckets}
             onAdd={addFacetValue}
             onRemove={removeFacetValue}
             onClearFacet={clearFacet}
+            onDateRangeChange={setDateRange}
+            onDateRangeClear={clearDateRange}
             onClearAll={clearAllFacets}
           />
 
