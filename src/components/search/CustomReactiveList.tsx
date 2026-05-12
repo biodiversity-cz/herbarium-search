@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { HerbariumRecord } from '@types';
+import { HerbariumRecord, firstValue, asArray } from '@types';
 
 interface ResultCardProps {
   record: HerbariumRecord;
@@ -9,50 +9,59 @@ interface ResultCardProps {
 const ResultCard: React.FC<ResultCardProps> = ({ record }) => {
   const navigate = useNavigate();
 
+  const scientificName = firstValue(record.scientific_name) ?? firstValue(record.title) ?? record.id;
+  const collector = asArray(record.creator).join(', ');
+  const locality = firstValue(record.locality);
+  const herbarium = asArray(record.herbarium_acronym).join(', ');
+
   return (
     <div
-      className="card result-card mb-3"
-      onClick={() => navigate(`/detail/${record.id}`)}
+      className="card result-card mb-2"
+      onClick={() => navigate(`/detail/${encodeURIComponent(record.id)}`)}
       role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && navigate(`/detail/${encodeURIComponent(record.id)}`)}
+      aria-label={`View details for ${scientificName}`}
     >
-      <div className="card-body">
-        <div className="row">
-          <div className="col-md-2">
-            {record.thumbnailUrl && (
-              <img
-                src={record.thumbnailUrl}
-                alt={record.scientificName}
-                className="result-image img-fluid"
-              />
-            )}
-          </div>
-          <div className="col-md-10">
-            <h5 className="result-title mb-2">{record.scientificName}</h5>
-            <div className="result-meta">
-              <p className="mb-1">
-                <strong>Catalog Number:</strong> {record.id}
-              </p>
+      <div className="card-body py-3">
+        <div className="d-flex gap-3 align-items-start">
+          <div className="flex-grow-1 min-width-0">
+            <h5 className="result-title mb-1">{scientificName}</h5>
+            <div className="result-meta d-flex flex-wrap gap-x-3 gap-2">
               {record.family && (
-                <p className="mb-1">
-                  <strong>Family:</strong> {record.family}
-                </p>
+                <span>
+                  <span className="result-meta__label">Family</span>{' '}
+                  {record.family}
+                </span>
               )}
-              {record.collector && (
-                <p className="mb-1">
-                  <strong>Collector:</strong> {record.collector}
-                </p>
+              {collector && (
+                <span>
+                  <span className="result-meta__label">Collector</span>{' '}
+                  {collector}
+                </span>
               )}
-              {record.locality && (
-                <p className="mb-1">
-                  <strong>Locality:</strong> {record.locality}, {record.country}
-                </p>
+              {locality && (
+                <span>
+                  <span className="result-meta__label">Locality</span>{' '}
+                  {locality}
+                  {record.country ? `, ${record.country}` : ''}
+                </span>
               )}
-              {record.collectionDate && (
-                <p className="mb-1">
-                  <strong>Collection Date:</strong> {record.collectionDate}
-                </p>
+              {record.event_date_raw && (
+                <span>
+                  <span className="result-meta__label">Date</span>{' '}
+                  {record.event_date_raw}
+                </span>
               )}
             </div>
+          </div>
+          <div className="result-card__badges flex-shrink-0 text-end">
+            {herbarium && (
+              <span className="badge bg-taxon">{herbarium}</span>
+            )}
+            {record.catalog_number && (
+              <div className="result-card__catalog mt-1">{record.catalog_number}</div>
+            )}
           </div>
         </div>
       </div>

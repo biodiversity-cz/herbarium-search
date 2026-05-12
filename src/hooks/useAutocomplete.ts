@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getSuggestions } from '@services/api';
 import { SuggesterResponse, SuggestSuggestion } from '@types';
+import { SuggestionOption, PersistedSearchState, SEARCH_STATE_STORAGE_KEY } from '@/types/suggestion';
 
-export interface SuggestionOption {
-  term: string;
-  type: 'taxon' | 'collector' | 'locality';
+export type { SuggestionOption };
+
+interface UseAutocompleteOptions {
+  /** When true, selected suggestions (taxon/collector/locality) are persisted to sessionStorage */
+  persist?: boolean;
 }
 
 interface UseAutocompleteReturn {
@@ -37,17 +40,57 @@ const capitalizeWithHtml = (term: string): string => {
   return term.charAt(0).toUpperCase() + term.slice(1);
 };
 
-export const useAutocomplete = (): UseAutocompleteReturn => {
+/** Load persisted suggestions from sessionStorage (only taxon/collector/locality) */
+const loadPersistedSuggestions = (): SuggestionOption[] => {
+  try {
+    const raw = sessionStorage.getItem(SEARCH_STATE_STORAGE_KEY);
+    if (!raw) return [];
+    const state: PersistedSearchState = JSON.parse(raw);
+    return Array.isArray(state.selectedSuggestions) ? state.selectedSuggestions : [];
+  } catch {
+    return [];
+  }
+};
+
+/** Save suggestions to sessionStorage */
+const persistSuggestions = (suggestions: SuggestionOption[]): void => {
+  try {
+    const state: PersistedSearchState = { selectedSuggestions: suggestions };
+    sessionStorage.setItem(SEARCH_STATE_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // sessionStorage not available – silently ignore
+  }
+};
+
+export const useAutocomplete = (options: UseAutocompleteOptions = {}): UseAutocompleteReturn => {
+  const { persist = false } = options;
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSuggestions, setSelectedSuggestions] = useState<SuggestionOption[]>([]);
+  const [selectedSuggestions, setSelectedSuggestionsRaw] = useState<SuggestionOption[]>(() =>
+    persist ? loadPersistedSuggestions() : []
+  );
   const [suggestions, setSuggestions] = useState<SuggestionOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /** Wrapper that also persists when enabled */
+  const setSelectedSuggestions = useCallback(
+    (updater: SuggestionOption[] | ((prev: SuggestionOption[]) => SuggestionOption[])) => {
+      setSelectedSuggestionsRaw((prev) => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        if (persist) {
+          persistSuggestions(next);
+        }
+        return next;
+      });
+    },
+    [persist]
+  );
 
   // Auto-focus input on page load
   useEffect(() => {
@@ -88,7 +131,7 @@ export const useAutocomplete = (): UseAutocompleteReturn => {
           response.suggest.taxonSuggest[queryKey].suggestions.forEach((option: SuggestSuggestion) => {
             options.push({
               term: capitalizeWithHtml(option.term),
-              type: 'taxon'
+              type: 'taxon',
             });
           });
         }
@@ -101,7 +144,7 @@ export const useAutocomplete = (): UseAutocompleteReturn => {
           response.suggest.creatorSuggest[queryKey].suggestions.forEach((option: SuggestSuggestion) => {
             options.push({
               term: capitalizeWithHtml(option.term),
-              type: 'collector'
+              type: 'collector',
             });
           });
         }
@@ -114,7 +157,7 @@ export const useAutocomplete = (): UseAutocompleteReturn => {
           response.suggest.localitySuggest[queryKey].suggestions.forEach((option: SuggestSuggestion) => {
             options.push({
               term: capitalizeWithHtml(option.term),
-              type: 'locality'
+              type: 'locality',
             });
           });
         }
@@ -157,46 +200,53 @@ export const useAutocomplete = (): UseAutocompleteReturn => {
     setSearchQuery(e.target.value);
   }, []);
 
-  const addSuggestion = useCallback((suggestion: SuggestionOption) => {
-    const exists = selectedSuggestions.some(s => s.term === suggestion.term && s.type === suggestion.type);
-    if (!exists) {
-      setSelectedSuggestions([...selectedSuggestions, suggestion]);
-    }
-    
-    setSearchQuery('');
-    setSuggestions([]);
-    setShowDropdown(false);
-    setHighlightedIndex(-1);
-  }, [selectedSuggestions]);
+  const addSuggestion = useCallback(
+    (suggestion: SuggestionOption) => {
+      setSelectedSuggestions((prev) => {
+        const exists = prev.some((s) => s.term === suggestion.term && s.type === suggestion.type);
+        return exists ? prev : [...prev, suggestion];
+      });
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (showDropdown && suggestions.length > 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev < suggestions.length - 1 ? prev + 1 : prev
-        );
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setHighlightedIndex(prev => prev > 0 ? prev - 1 : -1);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
-          addSuggestion(suggestions[highlightedIndex]);
+      setSearchQuery('');
+      setSuggestions([]);
+      setShowDropdown(false);
+      setHighlightedIndex(-1);
+    },
+    [setSelectedSuggestions]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (showDropdown && suggestions.length > 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setHighlightedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+            addSuggestion(suggestions[highlightedIndex]);
+          }
+        } else if (e.key === 'Escape') {
+          setShowDropdown(false);
         }
-      } else if (e.key === 'Escape') {
-        setShowDropdown(false);
       }
-    }
-  }, [showDropdown, suggestions, highlightedIndex, addSuggestion]);
+    },
+    [showDropdown, suggestions, highlightedIndex, addSuggestion]
+  );
 
-  const removeSelection = useCallback((index: number) => {
-    setSelectedSuggestions(selectedSuggestions.filter((_, i) => i !== index));
-  }, [selectedSuggestions]);
+  const removeSelection = useCallback(
+    (index: number) => {
+      setSelectedSuggestions((prev) => prev.filter((_, i) => i !== index));
+    },
+    [setSelectedSuggestions]
+  );
 
   const clearAllSelections = useCallback(() => {
     setSelectedSuggestions([]);
-  }, []);
+  }, [setSelectedSuggestions]);
 
   return {
     searchQuery,

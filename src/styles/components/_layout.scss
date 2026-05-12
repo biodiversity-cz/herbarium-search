@@ -1,106 +1,490 @@
-// Layout styles
+// ─── Design tokens ────────────────────────────────────────────────────────────
+$herb-900: #0d2b1a;   // darkest green – hero bg
+$herb-800: #14401f;
+$herb-700: #1a5c2a;   // primary brand green
+$herb-600: #217a35;
+$herb-500: #2e9e47;   // mid green
+$herb-400: #4db86a;
+$herb-300: #7dd49a;
+$herb-100: #e8f5ec;   // very light tint
+$herb-50:  #f4fbf6;
 
+$header-height: 64px;
+
+// ─── Fixed header ─────────────────────────────────────────────────────────────
 .app-header {
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1rem 0;
-  margin-bottom: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  height: $header-height;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+  // Transparent on hero (index page, not scrolled)
+  background-color: transparent;
+  box-shadow: none;
+
+  // Opaque once scrolled or on non-index pages
+  &--scrolled {
+    background-color: $herb-900;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  .navbar {
+    height: $header-height;
+    padding: 0;
+  }
 
   .navbar-brand {
-    font-weight: 600;
-    font-size: 1.5rem;
-    color: #667eea;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
 
-    &:hover {
-      color: #764ba2;
+    .brand-leaf {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .brand-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+
+    &:hover .brand-name {
+      color: $herb-300;
+    }
+  }
+
+  .eosc-logo-link {
+    display: flex;
+    align-items: center;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+
+    &:hover { opacity: 1; }
+  }
+
+  .eosc-logo {
+    height: 36px;
+    width: auto;
+    // Invert to white on dark header
+    filter: brightness(0) invert(1);
+  }
+
+  .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.4);
+
+    .navbar-toggler-icon {
+      filter: brightness(0) invert(1);
     }
   }
 
   .nav-link {
-    color: #333;
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 500;
-    margin: 0 0.5rem;
+    padding: 0.4rem 0.75rem;
     transition: color 0.2s;
 
-    &:hover {
-      color: #667eea;
-    }
-
+    &:hover,
     &.active {
-      color: #667eea;
+      color: $herb-300;
     }
   }
 }
 
-.app-footer {
-  background-color: #f8f9fa;
-  padding: 2rem 0;
-  margin-top: 4rem;
-  border-top: 1px solid #e9ecef;
-
-  .footer-content {
-    text-align: center;
-    color: #666;
-
-    p {
-      margin-bottom: 0.5rem;
-    }
-
-    a {
-      color: #667eea;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
+// Offset for pages that sit below the fixed header
+.page-content-offset {
+  padding-top: $header-height;
 }
 
-.index-page {
-  min-height: calc(100vh - 200px);
+// ─── Hero section ─────────────────────────────────────────────────────────────
+.hero-section {
+  position: relative;
+  min-height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center;
+  // Rich dark-green gradient background
+  background: linear-gradient(160deg, $herb-900 0%, $herb-800 40%, $herb-700 100%);
+  overflow: hidden;
 
-  .index-content {
-    text-align: center;
-    max-width: 700px;
-    padding: 2rem;
+  // Subtle botanical texture overlay
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba($herb-500, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba($herb-400, 0.10) 0%, transparent 50%);
+    pointer-events: none;
+  }
+}
 
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 1.5rem;
-      color: #333;
-    }
+.hero-overlay {
+  // Reserved for an optional background image overlay
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
 
-    p {
-      font-size: 1.2rem;
-      color: #666;
-      margin-bottom: 2rem;
-    }
+.hero-content {
+  position: relative;
+  z-index: 1;
+  padding-top: calc(#{$header-height} + 3rem);
+  padding-bottom: 5rem;
+  text-align: center;
+}
 
-    .search-box {
-      position: relative;
-      
-      .form-control {
-        padding: 1rem 1.5rem;
-        font-size: 1.1rem;
-        border-radius: 50px;
-        border: 2px solid #e9ecef;
-        transition: all 0.3s;
+.hero-text {
+  margin-bottom: 2.5rem;
+}
 
-        &:focus {
-          border-color: #667eea;
-          box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
+.hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.hero-search-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+
+  // Override SearchBox styles inside hero
+  .search-box {
+    margin-top: 0 !important;
+  }
+
+  .autocomplete-container {
+    .form-control {
+      background: rgba(255, 255, 255, 0.97);
+      border: 2px solid transparent;
+      border-radius: 0.5rem 0 0 0.5rem;
+      font-size: 1.05rem;
+      padding: 0.85rem 1.25rem;
+      color: #1a1a1a;
+
+      &:focus {
+        border-color: $herb-400;
+        box-shadow: 0 0 0 3px rgba($herb-400, 0.25);
+        background: #fff;
       }
 
-      .btn {
-        border-radius: 50px;
-        padding: 1rem 2rem;
-        font-weight: 500;
+      &::placeholder {
+        color: #888;
       }
+    }
+
+    .input-group-text {
+      background: rgba(255, 255, 255, 0.97);
+      border-color: transparent;
+      color: $herb-600;
     }
   }
+
+  .selected-tags {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+
+    .badge {
+      font-size: 0.82rem;
+    }
+
+    // Clear all link
+    .btn-link {
+      color: rgba(255, 255, 255, 0.7);
+      &:hover { color: #fff; }
+    }
+  }
+}
+
+.hero-hint {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 0;
+}
+
+// Search button inside hero
+.btn-search {
+  background-color: $herb-500;
+  border-color: $herb-500;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 0 1.75rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  &:hover,
+  &:focus {
+    background-color: $herb-600;
+    border-color: $herb-600;
+    color: #fff;
+  }
+
+  &:active {
+    background-color: $herb-700;
+    border-color: $herb-700;
+  }
+}
+
+// ─── Project info section ─────────────────────────────────────────────────────
+.project-info-section {
+  // nothing – child bands handle their own backgrounds
+}
+
+// Stats band
+.stats-band {
+  background-color: $herb-700;
+  padding: 3.5rem 0;
+}
+
+.stat-card {
+  text-align: center;
+  color: #fff;
+  padding: 1rem;
+
+  .stat-icon {
+    color: $herb-300;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.72);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+// About band
+.about-band {
+  background-color: #fff;
+  padding: 5rem 0;
+}
+
+.section-eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: $herb-600;
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  color: $herb-900;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.section-body {
+  font-size: 1rem;
+  color: #444;
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+.btn-outline-herb {
+  border: 2px solid $herb-600;
+  color: $herb-700;
+  font-weight: 600;
+  border-radius: 0.4rem;
+  padding: 0.55rem 1.4rem;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.2s, color 0.2s;
+
+  &:hover {
+    background-color: $herb-700;
+    color: #fff;
+  }
+}
+
+// Placeholder image block
+.placeholder-image-block {
+  background: $herb-50;
+  border: 2px dashed $herb-300;
+  border-radius: 1rem;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: $herb-400;
+
+  .placeholder-icon {
+    opacity: 0.5;
+  }
+
+  .placeholder-label {
+    font-size: 0.85rem;
+    color: $herb-400;
+    margin: 0;
+  }
+}
+
+// Features band
+.features-band {
+  background-color: $herb-50;
+  padding: 5rem 0;
+}
+
+.feature-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 2rem 1.75rem;
+  height: 100%;
+  border: 1px solid rgba($herb-300, 0.4);
+  transition: box-shadow 0.2s, transform 0.2s;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba($herb-700, 0.12);
+    transform: translateY(-3px);
+  }
+
+  .feature-icon {
+    color: $herb-600;
+    margin-bottom: 1rem;
+  }
+
+  .feature-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $herb-900;
+    margin-bottom: 0.6rem;
+  }
+
+  .feature-description {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.65;
+    margin: 0;
+  }
+}
+
+// Partners band
+.partners-band {
+  background-color: #fff;
+  padding: 4rem 0;
+  border-top: 1px solid #e9ecef;
+}
+
+.partners-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.partner-logo {
+  height: 70px;
+  width: auto;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+
+  &:hover { opacity: 1; }
+}
+
+.partners-note {
+  max-width: 720px;
+  margin: 0 auto;
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+  line-height: 1.65;
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+.app-footer {
+  background-color: $herb-900;
+  padding: 2rem 0;
+  color: rgba(255, 255, 255, 0.65);
+
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    text-align: center;
+  }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    .brand-leaf { font-size: 1.2rem; }
+
+    .footer-brand-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+  }
+
+  .footer-tagline {
+    font-size: 0.85rem;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .footer-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+  }
+
+  .footer-sep {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .footer-link {
+    color: rgba(255, 255, 255, 0.65);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: color 0.2s;
+
+    &:hover { color: $herb-300; }
+  }
+}
+
+// ─── Index page wrapper ───────────────────────────────────────────────────────
+.index-page {
+  // No extra styles needed – hero + project-info sections handle everything
 }

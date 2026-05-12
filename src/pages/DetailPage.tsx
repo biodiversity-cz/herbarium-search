@@ -1,7 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRecordById } from '@services/api';
-import { HerbariumRecord } from '@types';
+import { HerbariumRecord, firstValue, asArray } from '@types';
+
+// ─── Small presentational helpers ────────────────────────────────────────────
+
+interface FieldRowProps {
+  label: string;
+  value: React.ReactNode;
+}
+
+/** Single label + value row. Renders nothing when value is empty. */
+const FieldRow: React.FC<FieldRowProps> = ({ label, value }) => {
+  if (!value || (typeof value === 'string' && value.trim() === '')) return null;
+  return (
+    <tr className="detail-field-row">
+      <th className="detail-field-label">{label}</th>
+      <td className="detail-field-value">{value}</td>
+    </tr>
+  );
+};
+
+interface SectionProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+/** Collapsible section wrapper. Hidden when all children are null. */
+const Section: React.FC<SectionProps> = ({ title, children }) => {
+  // Check if any child rendered (React doesn't expose this easily, so we
+  // always render the section and rely on FieldRow to suppress empty rows)
+  return (
+    <div className="detail-section">
+      <h2 className="detail-section__title">{title}</h2>
+      <table className="detail-table">
+        <tbody>{children}</tbody>
+      </table>
+    </div>
+  );
+};
+
+// ─── Loading / error states ───────────────────────────────────────────────────
+
+const LoadingState: React.FC = () => (
+  <div className="detail-page">
+    <div className="container">
+      <div className="detail-loading" role="status" aria-live="polite">
+        <div className="spinner-border text-success" aria-hidden="true" />
+        <span className="visually-hidden">Loading specimen…</span>
+      </div>
+    </div>
+  </div>
+);
+
+interface ErrorStateProps {
+  message: string;
+  onBack: () => void;
+}
+
+const ErrorState: React.FC<ErrorStateProps> = ({ message, onBack }) => (
+  <div className="detail-page">
+    <div className="container py-4">
+      <div className="alert alert-danger" role="alert">{message}</div>
+      <button className="btn btn-outline-secondary btn-sm" onClick={onBack}>
+        ← Go back
+      </button>
+    </div>
+  </div>
+);
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 const DetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,199 +79,140 @@ const DetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (id) {
-      fetchRecord(id);
-    }
-  }, [id]);
-
-  const fetchRecord = async (recordId: string) => {
+    if (!id) return;
     setLoading(true);
     setError(null);
+    getRecordById(decodeURIComponent(id))
+      .then(setRecord)
+      .catch((err) => {
+        console.error('Fetch error:', err);
+        setError('Failed to load specimen details. Please try again.');
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
-    try {
-      const data = await getRecordById(recordId);
-      setRecord(data);
-    } catch (err) {
-      setError('Failed to fetch record details. Please try again.');
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading) return <LoadingState />;
+  if (error || !record) return <ErrorState message={error ?? 'Record not found'} onBack={() => navigate(-1)} />;
 
-  if (loading) {
-    return (
-      <div className="detail-page">
-        <div className="container">
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // ── Derived display values ─────────────────────────────────────────────────
+  const scientificName = firstValue(record.scientific_name) ?? firstValue(record.title) ?? record.id;
+  const collectors = asArray(record.creator);
+  const recordedBy = asArray(record.recorded_by);
+  const localities = asArray(record.locality);
+  const herbariumAcronyms = asArray(record.herbarium_acronym);
+  const collectionCodes = asArray(record.collection_code);
+  const prevIds = asArray(record.previous_identifications);
 
-  if (error || !record) {
-    return (
-      <div className="detail-page">
-        <div className="container">
-          <div className="alert alert-danger" role="alert">
-            {error || 'Record not found'}
-          </div>
-          <button className="btn btn-primary" onClick={() => navigate(-1)}>
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Show recorded_by only if it differs from creator
+  const showRecordedBy =
+    recordedBy.length > 0 &&
+    recordedBy.join('|') !== collectors.join('|');
 
   return (
     <div className="detail-page">
+      {/* ── Header banner ──────────────────────────────────────────────────── */}
+      <div className="detail-header">
+        <div className="container">
+          <button
+            className="btn btn-link detail-header__back p-0 mb-3"
+            onClick={() => navigate(-1)}
+            aria-label="Back to results"
+          >
+            ← Back to results
+          </button>
+          <h1 className="detail-header__title">{scientificName}</h1>
+          <div className="detail-header__meta">
+            {herbariumAcronyms.length > 0 && (
+              <span className="badge bg-taxon me-2">{herbariumAcronyms.join(', ')}</span>
+            )}
+            {record.catalog_number && (
+              <span className="detail-header__catalog">#{record.catalog_number}</span>
+            )}
+            {record.basis_of_record && (
+              <span className="detail-header__basis ms-2 text-white-50">
+                {record.basis_of_record}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Body ───────────────────────────────────────────────────────────── */}
       <div className="container">
-        <div className="specimen-detail">
-          <div className="back-button">
-            <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
-              ← Back to Results
-            </button>
-          </div>
+        <div className="detail-body">
 
-          <div className="specimen-header">
-            <h1>{record.scientificName}</h1>
-            <div className="catalog-number">
-              Catalog Number: {record.catalogNumber}
-            </div>
-          </div>
+          {/* ── Taxonomy ─────────────────────────────────────────────────── */}
+          <Section title="Taxonomy">
+            <FieldRow label="Scientific name" value={<em>{scientificName}</em>} />
+            <FieldRow label="Family" value={record.family} />
+            <FieldRow label="Genus" value={record.genus} />
+            <FieldRow label="Specific epithet" value={record.specific_epithet} />
+            {prevIds.length > 0 && (
+              <FieldRow
+                label="Previous identifications"
+                value={
+                  <ul className="detail-list">
+                    {prevIds.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
+                }
+              />
+            )}
+          </Section>
 
-          <div className="row">
-            <div className="col-md-6">
-              {record.imageUrl && (
-                <div className="specimen-image-container">
-                  <img
-                    src={record.imageUrl}
-                    alt={record.scientificName}
-                    className="img-fluid"
-                  />
-                </div>
-              )}
-            </div>
+          {/* ── Collection ───────────────────────────────────────────────── */}
+          <Section title="Collection">
+            {collectors.length > 0 && (
+              <FieldRow
+                label="Collector(s)"
+                value={collectors.join('; ')}
+              />
+            )}
+            {showRecordedBy && (
+              <FieldRow label="Recorded by" value={recordedBy.join('; ')} />
+            )}
+            <FieldRow label="Collection date" value={record.event_date_raw} />
+            <FieldRow label="Catalog number" value={record.catalog_number} />
+            {collectionCodes.length > 0 && (
+              <FieldRow label="Collection code" value={collectionCodes.join(', ')} />
+            )}
+            {herbariumAcronyms.length > 0 && (
+              <FieldRow label="Herbarium" value={herbariumAcronyms.join(', ')} />
+            )}
+          </Section>
 
-            <div className="col-md-6">
-              <div className="specimen-info">
-                <div className="info-section">
-                  <h3>Taxonomy</h3>
-                  {record.family && (
-                    <div className="info-row">
-                      <div className="info-label">Family:</div>
-                      <div className="info-value">{record.family}</div>
-                    </div>
-                  )}
-                  {record.genus && (
-                    <div className="info-row">
-                      <div className="info-label">Genus:</div>
-                      <div className="info-value">{record.genus}</div>
-                    </div>
-                  )}
-                  {record.species && (
-                    <div className="info-row">
-                      <div className="info-label">Species:</div>
-                      <div className="info-value">{record.species}</div>
-                    </div>
-                  )}
-                  {record.author && (
-                    <div className="info-row">
-                      <div className="info-label">Author:</div>
-                      <div className="info-value">{record.author}</div>
-                    </div>
-                  )}
-                </div>
+          {/* ── Location ─────────────────────────────────────────────────── */}
+          <Section title="Location">
+            {localities.length > 0 && (
+              <FieldRow
+                label="Locality"
+                value={localities.join('; ')}
+              />
+            )}
+            <FieldRow label="Country" value={record.country} />
+            <FieldRow label="Country code" value={record.country_code} />
+          </Section>
 
-                <div className="info-section">
-                  <h3>Collection Information</h3>
-                  {record.collector && (
-                    <div className="info-row">
-                      <div className="info-label">Collector:</div>
-                      <div className="info-value">{record.collector}</div>
-                    </div>
-                  )}
-                  {record.collectionDate && (
-                    <div className="info-row">
-                      <div className="info-label">Collection Date:</div>
-                      <div className="info-value">{record.collectionDate}</div>
-                    </div>
-                  )}
-                  {record.institution && (
-                    <div className="info-row">
-                      <div className="info-label">Institution:</div>
-                      <div className="info-value">{record.institution}</div>
-                    </div>
-                  )}
-                </div>
+          {/* ── Identifiers & links ───────────────────────────────────────── */}
+          <Section title="Identifiers">
+            <FieldRow label="Record ID" value={<code className="detail-id">{record.id}</code>} />
+            {record.material_sample_id && (
+              <FieldRow
+                label="Source record"
+                value={
+                  <a
+                    href={record.material_sample_id}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="detail-link"
+                  >
+                    {record.material_sample_id}
+                  </a>
+                }
+              />
+            )}
+            <FieldRow label="Basis of record" value={record.basis_of_record} />
+          </Section>
 
-                <div className="info-section">
-                  <h3>Location</h3>
-                  {record.country && (
-                    <div className="info-row">
-                      <div className="info-label">Country:</div>
-                      <div className="info-value">{record.country}</div>
-                    </div>
-                  )}
-                  {record.locality && (
-                    <div className="info-row">
-                      <div className="info-label">Locality:</div>
-                      <div className="info-value">{record.locality}</div>
-                    </div>
-                  )}
-                  {record.habitat && (
-                    <div className="info-row">
-                      <div className="info-label">Habitat:</div>
-                      <div className="info-value">{record.habitat}</div>
-                    </div>
-                  )}
-                  {record.altitude && (
-                    <div className="info-row">
-                      <div className="info-label">Altitude:</div>
-                      <div className="info-value">{record.altitude} m</div>
-                    </div>
-                  )}
-                  {(record.latitude && record.longitude) && (
-                    <div className="info-row">
-                      <div className="info-label">Coordinates:</div>
-                      <div className="info-value">
-                        {record.latitude.toFixed(4)}, {record.longitude.toFixed(4)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {(record.determiner || record.determinationDate || record.notes) && (
-                  <div className="info-section">
-                    <h3>Additional Information</h3>
-                    {record.determiner && (
-                      <div className="info-row">
-                        <div className="info-label">Determiner:</div>
-                        <div className="info-value">{record.determiner}</div>
-                      </div>
-                    )}
-                    {record.determinationDate && (
-                      <div className="info-row">
-                        <div className="info-label">Determination Date:</div>
-                        <div className="info-value">{record.determinationDate}</div>
-                      </div>
-                    )}
-                    {record.notes && (
-                      <div className="info-row">
-                        <div className="info-label">Notes:</div>
-                        <div className="info-value">{record.notes}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

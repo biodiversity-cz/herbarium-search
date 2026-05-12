@@ -7,9 +7,11 @@ export type { SuggestionOption };
 
 interface SearchBoxProps {
   onSubmit?: (query: string, selectedSuggestions: SuggestionOption[]) => void;
+  /** When true, selected taxon/collector/locality tags are persisted in sessionStorage */
+  persist?: boolean;
 }
 
-export const SearchBox: React.FC<SearchBoxProps> = ({ onSubmit }) => {
+export const SearchBox: React.FC<SearchBoxProps> = ({ onSubmit, persist = false }) => {
   const {
     searchQuery,
     selectedSuggestions,
@@ -24,7 +26,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSubmit }) => {
     handleKeyDown,
     inputRef,
     dropdownRef,
-  } = useAutocomplete();
+  } = useAutocomplete({ persist });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,8 +65,11 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSubmit }) => {
               <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
             </span>
           )}
-          <button type="submit" className="btn btn-primary">
-            Search
+          <button type="submit" className="btn btn-search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+            </svg>
+            <span className="ms-2">Search</span>
           </button>
         </div>
 

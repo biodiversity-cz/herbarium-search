@@ -1,75 +1,181 @@
-// Detail page styles
+// ─── Detail page ──────────────────────────────────────────────────────────────
 
 .detail-page {
   min-height: calc(100vh - 200px);
-  padding: 2rem 0;
+  padding-bottom: 4rem;
 }
 
-.specimen-detail {
-  .specimen-header {
-    margin-bottom: 2rem;
+// ── Header banner ─────────────────────────────────────────────────────────────
+.detail-header {
+  background: linear-gradient(135deg, #1a5c2a 0%, #0d2b1a 100%);
+  color: #fff;
+  padding: 2rem 0 2.5rem;
+  margin-bottom: 0;
 
-    h1 {
-      font-style: italic;
-      color: #333;
-      margin-bottom: 1rem;
-    }
+  &__back {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.88rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.15s;
 
-    .catalog-number {
-      font-size: 1.2rem;
-      color: #666;
-      font-weight: 500;
-    }
+    &:hover { color: #fff; }
   }
 
-  .specimen-image-container {
-    margin-bottom: 2rem;
-
-    img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
+  &__title {
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 800;
+    font-style: italic;
+    color: #fff;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
   }
 
-  .specimen-info {
-    .info-section {
-      margin-bottom: 2rem;
-
-      h3 {
-        font-size: 1.3rem;
-        color: #333;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #667eea;
-      }
-
-      .info-row {
-        display: flex;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #e9ecef;
-
-        &:last-child {
-          border-bottom: none;
-        }
-
-        .info-label {
-          font-weight: 600;
-          color: #666;
-          width: 200px;
-          flex-shrink: 0;
-        }
-
-        .info-value {
-          color: #333;
-          flex: 1;
-        }
-      }
-    }
+  &__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.9rem;
   }
 
-  .back-button {
-    margin-bottom: 2rem;
+  &__catalog {
+    color: rgba(255, 255, 255, 0.75);
+    font-family: monospace;
+    font-size: 0.88rem;
+  }
+
+  &__basis {
+    font-size: 0.82rem;
+  }
+}
+
+// ── Body layout ───────────────────────────────────────────────────────────────
+.detail-body {
+  padding-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0; // sections handle their own spacing
+  max-width: 860px;
+}
+
+// ── Section ───────────────────────────────────────────────────────────────────
+.detail-section {
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #1a5c2a;
+    margin-bottom: 0.75rem;
+  }
+}
+
+// ── Field table ───────────────────────────────────────────────────────────────
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.detail-field-row {
+  vertical-align: top;
+
+  &:not(:last-child) td,
+  &:not(:last-child) th {
+    padding-bottom: 0.55rem;
+  }
+}
+
+.detail-field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #666;
+  white-space: nowrap;
+  padding-right: 1.5rem;
+  width: 180px;
+  min-width: 140px;
+}
+
+.detail-field-value {
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  word-break: break-word;
+}
+
+// ── Misc detail elements ──────────────────────────────────────────────────────
+.detail-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+
+  li + li { margin-top: 0.2rem; }
+}
+
+.detail-id {
+  font-size: 0.82rem;
+  color: #555;
+  background: #f4fbf6;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  word-break: break-all;
+}
+
+.detail-link {
+  color: #1a5c2a;
+  word-break: break-all;
+  font-size: 0.88rem;
+
+  &:hover { color: #2e9e47; }
+}
+
+// ── Loading state ─────────────────────────────────────────────────────────────
+.detail-loading {
+  display: flex;
+  justify-content: center;
+  padding: 5rem 0;
+}
+
+// ── Result card extras ────────────────────────────────────────────────────────
+.result-meta__label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.82rem;
+  margin-right: 0.2rem;
+}
+
+.result-card__badges {
+  min-width: 80px;
+}
+
+.result-card__catalog {
+  font-size: 0.75rem;
+  color: #888;
+  font-family: monospace;
+}
+
+// Responsive
+@media (max-width: 576px) {
+  .detail-field-label {
+    display: block;
+    width: auto;
+    padding-right: 0;
+    padding-bottom: 0.15rem;
+  }
+
+  .detail-table,
+  .detail-field-row,
+  .detail-field-label,
+  .detail-field-value {
+    display: block;
+    width: 100%;
   }
 }
