@@ -80,8 +80,11 @@ export type FacetConfig = TermsFacetConfig | DateRangeFacetConfig | NumericRange
  * Order here determines render order in the sidebar.
  *
  * NOTE on Solr fields:
- *  - taxon/collector/locality use *_facet copy-fields (string + docValues=true)
- *    that must be present in managed-schema.xml and data re-indexed.
+ *  - taxon/collector/locality:
+ *      filterField  → text_general field (tokenized + lowercased) so that
+ *                     case-insensitive phrase matching works correctly.
+ *      facetField   → *_facet copy-field (StrField + docValues=true) used
+ *                     only for facet counts (requires re-index).
  *  - family/country/institution already have docValues=true in the schema.
  *  - year/altitude are future range facets (event_date_from, altitude fields TBD).
  */
@@ -90,7 +93,9 @@ export const FACET_CONFIG: FacetConfig[] = [
     key: 'taxon',
     type: 'terms',
     label: 'Taxon',
-    filterField: 'scientific_name_facet',
+    // Use text_general for filtering (case-insensitive phrase match)
+    filterField: 'scientific_name',
+    // Use StrField copy-field for facet counts (docValues=true)
     facetField: 'scientific_name_facet',
     hasAutocomplete: true,
     suggesterKey: 'taxonSuggest',
@@ -102,7 +107,7 @@ export const FACET_CONFIG: FacetConfig[] = [
     key: 'collector',
     type: 'terms',
     label: 'Collector',
-    filterField: 'creator_facet',
+    filterField: 'creator',
     facetField: 'creator_facet',
     hasAutocomplete: true,
     suggesterKey: 'creatorSuggest',
@@ -114,7 +119,7 @@ export const FACET_CONFIG: FacetConfig[] = [
     key: 'locality',
     type: 'terms',
     label: 'Locality',
-    filterField: 'locality_facet',
+    filterField: 'locality',
     facetField: 'locality_facet',
     hasAutocomplete: true,
     suggesterKey: 'localitySuggest',
