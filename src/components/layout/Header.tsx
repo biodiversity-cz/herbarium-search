@@ -37,8 +37,7 @@ const Header: React.FC = () => {
         <nav className="navbar navbar-expand-lg" aria-label="Main navigation">
           {/* Brand / logo */}
           <Link className="navbar-brand" to="/">
-            <span className="brand-leaf" aria-hidden="true">🌿</span>
-            <span className="brand-name">HerbCol</span>
+            <img src="/assets/logo.png" alt="HerbCol" className="brand-logo" />
           </Link>
 
           {/* EOSC.CZ logo – right side */}
@@ -51,7 +50,7 @@ const Header: React.FC = () => {
               aria-label="EOSC CZ – opens in new tab"
             >
               <img
-                src="https://webcentrum.muni.cz/media/3831863/seda_eosc.png"
+                src="/assets/eosc-logo.png"
                 alt="EOSC CZ"
                 className="eosc-logo"
               />

@@ -42,6 +42,12 @@ $header-height: 64px;
     gap: 0.4rem;
     text-decoration: none;
 
+    .brand-logo {
+      height: 50px;
+      width: auto;
+      object-fit: contain;
+    }
+
     .brand-leaf {
       font-size: 1.4rem;
       line-height: 1;
@@ -69,10 +75,10 @@ $header-height: 64px;
   }
 
   .eosc-logo {
-    height: 36px;
+    height: 46px;
     width: auto;
     // Invert to white on dark header
-    filter: brightness(0) invert(1);
+    //filter: brightness(0) invert(1);
   }
 
   .navbar-toggler {
@@ -143,8 +149,8 @@ $header-height: 64px;
 }
 
 .hero-title {
-  font-size: clamp(2.2rem, 5vw, 3.8rem);
-  font-weight: 800;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
   color: #fff;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;
@@ -152,8 +158,8 @@ $header-height: 64px;
 }
 
 .hero-subtitle {
-  font-size: clamp(1rem, 2vw, 1.25rem);
-  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: rgba(255, 255, 255, 0.85);
   max-width: 640px;
   margin: 0 auto;
   line-height: 1.6;
@@ -173,7 +179,7 @@ $header-height: 64px;
       background: rgba(255, 255, 255, 0.97);
       border: 2px solid transparent;
       border-radius: 0.5rem 0 0 0.5rem;
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       padding: 0.85rem 1.25rem;
       color: #1a1a1a;
 
@@ -306,7 +312,7 @@ $header-height: 64px;
 }
 
 .section-body {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #444;
   line-height: 1.75;
   margin-bottom: 1rem;
@@ -384,7 +390,7 @@ $header-height: 64px;
   }
 
   .feature-description {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     color: #555;
     line-height: 1.65;
     margin: 0;
