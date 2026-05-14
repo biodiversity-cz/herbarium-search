@@ -44,7 +44,7 @@ const ProjectInfoSection: React.FC = () => {
         <div className="container">
           <div className="row g-4 justify-content-center">
             <StatCard
-              value="1 200 000+"
+              value="50 000+"
               label="Digitised specimens"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
@@ -53,7 +53,7 @@ const ProjectInfoSection: React.FC = () => {
               }
             />
             <StatCard
-              value="50+"
+              value="5"
               label="Contributing herbaria"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
@@ -62,7 +62,7 @@ const ProjectInfoSection: React.FC = () => {
               }
             />
             <StatCard
-              value="300 000+"
+              value="3 000+"
               label="Species represented"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
@@ -92,7 +92,7 @@ const ProjectInfoSection: React.FC = () => {
               <h2 className="section-title">Czech Herbarium Network</h2>
               <p className="section-body">
                 The Czech Repository of Herbarium Specimen Images (HerbCol) aggregates digitised
-                collections from herbaria across the Czech Republic, making centuries of botanical
+                collection photos from herbaria across the Czech Republic, making centuries of botanical
                 knowledge freely accessible to researchers, educators, and the public.
               </p>
               <p className="section-body">
@@ -107,13 +107,10 @@ const ProjectInfoSection: React.FC = () => {
               </a>
             </div>
             <div className="col-lg-6">
-              <div className="placeholder-image-block" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" viewBox="0 0 16 16" className="placeholder-icon">
-                  <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
-                  <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
-                </svg>
-                <p className="placeholder-label">Project image placeholder</p>
-              </div>
+              <img src="/assets/herbarium.jpg" className="img-fluid" />
+              {/*<div className="placeholder-image-block" aria-hidden="true">*/}
+              {/*  <p className="placeholder-label">Project image placeholder</p>*/}
+              {/*</div>*/}
             </div>
           </div>
         </div>

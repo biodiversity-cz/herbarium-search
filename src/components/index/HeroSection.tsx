@@ -15,10 +15,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onSearch }) => {
       <div className="hero-overlay" />
       <div className="hero-content container">
         <div className="hero-text">
-          <h1 className="hero-title">Herbarium Repository</h1>
+          <h1 className="hero-title">HerbBio NRP Repository</h1>
           <p className="hero-subtitle">
-            Czech Repository of Herbarium Specimen Images — search through our comprehensive
-            collection of digitalised herbarium specimens
+            Czech Repository of Herbarium Specimen Images — search through our collection of digitalised herbarium specimens
           </p>
         </div>
 
