@@ -134,3 +134,62 @@ If you rename a suggester in Solr, update all four locations.
 ## 11. `npm run build` must pass before committing
 
 The build runs `tsc` (TypeScript type-check) then `vite build`. TypeScript errors are fatal. The CSS timing warning from `vite:css` is informational only and can be ignored.
+
+---
+
+## 12. Header logo gradient backgrounds — unified spotlight effect with CSS variables
+
+**Design:** The Header has white-optimized logos (PNGs optimized for white backgrounds). To keep them visible on both transparent (hero) and dark green (scrolled) navbar states, a unified `.logos-gradient-overlay` div spans the entire header width and creates a customizable white "spotlight".
+
+**Implementation:**
+- `.logos-gradient-overlay` is an absolutely positioned overlay above the navbar (`z-index: 1`) but below actual content (`z-index: 2`)
+- Gradient is controlled by **CSS custom properties (variables)** defined on `.app-header`:
+  - `--gradient-fade-start`: Where dark zone starts (default: `0%`)
+  - `--gradient-fade-end`: Where dark zone ends / white fade-in begins (default: `8%`)
+  - `--gradient-white-start`: Where solid white begins (default: `20%`)
+  - `--gradient-white-end`: Where solid white ends / fade-out begins (default: `65%`) ← **MAIN CONTROL**
+  - `--gradient-fade-out-end`: Where gradient fully fades (default: `85%`)
+
+**How to customize:**
+
+Edit `src/styles/components/_layout.scss` around line 30:
+
+```scss
+.app-header {
+  // ... existing code ...
+
+  // Customize via CSS variables below – adjust these to fine-tune the gradient
+  --gradient-fade-start: 0%;           // Keep this at 0% usually
+  --gradient-fade-end: 8%;             // Fine-tune white fade-in speed
+  --gradient-white-start: 20%;         // Where white zone begins
+  --gradient-white-end: 65%;           // SHORTEN THIS to end white sooner (e.g., 55%)
+  --gradient-fade-out-end: 85%;        // Fine-tune final fade
+}
+```
+
+**Common adjustments:**
+
+| Need | Change | Example |
+|------|--------|---------|
+| Gradient too long (white reaches right edge) | Decrease `--gradient-white-end` | `55%` instead of `65%` |
+| Gradient too short (white ends too early) | Increase `--gradient-white-end` | `75%` instead of `65%` |
+| Fade-in too fast | Decrease gap between `--gradient-fade-end` and `--gradient-white-start` | Change to `--gradient-fade-end: 15%` |
+| Fade-out too fast on right | Increase `--gradient-fade-out-end` | `90%` instead of `85%` |
+
+**CSS details:**
+- Both default state (hero) and `.app-header--scrolled` state use the **same variables**
+- Only the edge colors change: `transparent` (hero) vs `$herb-900` (scrolled)
+- `pointer-events: none` ensures the gradient overlay doesn't block interactions
+- `transition: background 0.3s ease` smoothly animates color changes
+
+**Example: Make gradient end at 55% instead of 65%**
+
+```scss
+.app-header {
+  --gradient-white-end: 55%;  // Instead of 65%
+}
+```
+
+This will make the white zone end much earlier (before reaching EOSC logo area).
+
+**Rule:** Use percentages (%) for the positions. All variables are inherited by both hero and scrolled states automatically.

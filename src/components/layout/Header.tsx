@@ -34,6 +34,9 @@ const Header: React.FC = () => {
   return (
     <header className={`app-header${scrolled ? ' app-header--scrolled' : ''}`}>
       <div className="container">
+        {/* Unified gradient background spanning both logos */}
+        <div className="logos-gradient-overlay" />
+
         <nav className="navbar navbar-expand-lg" aria-label="Main navigation">
           {/* Brand / logo */}
           <Link className="navbar-brand" to="/">

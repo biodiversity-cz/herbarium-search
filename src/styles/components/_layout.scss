@@ -25,15 +25,58 @@ $header-height: 64px;
   background-color: transparent;
   box-shadow: none;
 
+  // Unified gradient background overlay for both logos
+  // Customize via CSS variables below – adjust these to fine-tune the gradient
+  --gradient-fade-start: 0%;           // Where dark zone starts
+  --gradient-fade-end: 7%;             // Where dark zone ends / white fade begins
+  --gradient-white-start: 10%;         // Where solid white begins
+  --gradient-white-end: 35%;           // Where solid white ends / fade-out begins (ADJUST THIS!)
+  --gradient-fade-out-end: 45%;        // Where gradient fully fades out
+
+  .logos-gradient-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: $header-height;
+    pointer-events: none;
+    z-index: 1;
+    transition: background 0.3s ease;
+
+    // On transparent header (hero) – starts transparent on far left, white in middle, fades early on right
+    background: linear-gradient(
+      to right,
+      transparent var(--gradient-fade-start),
+      transparent var(--gradient-fade-end),
+      rgba(255, 255, 255, 0.95) var(--gradient-white-start),
+      rgba(255, 255, 255, 0.95) var(--gradient-white-end),
+      rgba(255, 255, 255, 0.4) var(--gradient-fade-out-end)
+    );
+  }
+
   // Opaque once scrolled or on non-index pages
   &--scrolled {
     background-color: $herb-900;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+    // Scrolled state – gradient transitions to navbar color, uses same CSS variables
+    .logos-gradient-overlay {
+      background: linear-gradient(
+        to right,
+        $herb-900 var(--gradient-fade-start),
+        $herb-900 var(--gradient-fade-end),
+        rgba(255, 255, 255, 0.95) var(--gradient-white-start),
+        rgba(255, 255, 255, 0.95) var(--gradient-white-end),
+        rgba(255, 255, 255, 0.4) var(--gradient-fade-out-end)
+      );
+    }
   }
 
   .navbar {
     height: $header-height;
     padding: 0;
+    position: relative;
+    z-index: 2;
   }
 
   .navbar-brand {
@@ -77,8 +120,6 @@ $header-height: 64px;
   .eosc-logo {
     height: 46px;
     width: auto;
-    // Invert to white on dark header
-    //filter: brightness(0) invert(1);
   }
 
   .navbar-toggler {
