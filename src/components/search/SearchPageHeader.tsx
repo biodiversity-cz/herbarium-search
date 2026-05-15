@@ -20,7 +20,7 @@ const SearchPageHeader: React.FC<SearchPageHeaderProps> = ({ query, totalResults
             {!loading && (
               <p className="search-header__meta mb-0">
                 <strong>{totalResults.toLocaleString()}</strong>{' '}
-                {totalResults === 1 ? 'specimen' : 'specimens'} found
+                {totalResults === 1 ? 'image' : 'images'} found
                 {query && query !== '*:*' && (
                   <span className="ms-2 text-white-50">
                     for <em>&ldquo;{query}&rdquo;</em>

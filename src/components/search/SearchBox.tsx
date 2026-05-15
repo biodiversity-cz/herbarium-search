@@ -55,7 +55,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSubmit, persist = false 
             value={searchQuery}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            aria-label="Search herbarium specimens"
+            aria-label="Search herbarium specimen images"
             aria-autocomplete="list"
             aria-expanded={showDropdown}
             autoComplete="off"

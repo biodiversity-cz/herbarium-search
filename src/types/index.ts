@@ -1,5 +1,5 @@
 /**
- * Herbarium Specimen Record – matches actual Solr document fields.
+ * Herbarium Specimen Image Record – matches actual Solr document fields.
  *
  * Multivalued Solr fields are typed as string[] | string to handle both
  * single-value and multi-value responses gracefully.

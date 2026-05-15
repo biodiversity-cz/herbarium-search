@@ -97,7 +97,7 @@ export type FacetConfig = TermsFacetConfig | DateRangeFacetConfig | NumericRange
  *  These must NOT be swapped (see docs/gotchas.md #7).
  */
 export const FACET_CONFIG: FacetConfig[] = [
-  // ── Primary search facets (with autocomplete) ──────────────────────────────
+  // ── Taxonomy ───────────────────────────────────────────────────────────────
   {
     key: 'taxon',
     type: 'terms',
@@ -110,32 +110,6 @@ export const FACET_CONFIG: FacetConfig[] = [
     badgeClass: 'bg-taxon',
     enabled: true,
   },
-  {
-    key: 'collector',
-    type: 'terms',
-    label: 'Collector',
-    filterField: 'creator',
-    facetField: 'creator_facet',
-    hasAutocomplete: true,
-    suggesterKey: 'creatorSuggest',
-    facetLimit: 50,
-    badgeClass: 'bg-collector',
-    enabled: true,
-  },
-  {
-    key: 'locality',
-    type: 'terms',
-    label: 'Locality',
-    filterField: 'locality',
-    facetField: 'locality_facet',
-    hasAutocomplete: true,
-    suggesterKey: 'localitySuggest',
-    facetLimit: 50,
-    badgeClass: 'bg-locality',
-    enabled: true,
-  },
-
-  // ── Taxonomy ───────────────────────────────────────────────────────────────
   {
     key: 'genus',
     type: 'terms',
@@ -173,6 +147,33 @@ export const FACET_CONFIG: FacetConfig[] = [
     enabled: true,
   },
 
+  {
+    key: 'collector',
+    type: 'terms',
+    label: 'Collector',
+    filterField: 'creator',
+    facetField: 'creator_facet',
+    hasAutocomplete: true,
+    suggesterKey: 'creatorSuggest',
+    facetLimit: 50,
+    badgeClass: 'bg-collector',
+    enabled: true,
+  },
+  {
+    key: 'locality',
+    type: 'terms',
+    label: 'Locality',
+    filterField: 'locality',
+    facetField: 'locality_facet',
+    hasAutocomplete: true,
+    suggesterKey: 'localitySuggest',
+    facetLimit: 50,
+    badgeClass: 'bg-locality',
+    enabled: true,
+  },
+
+
+
   // ── Geography ──────────────────────────────────────────────────────────────
   {
     key: 'country',
@@ -186,31 +187,7 @@ export const FACET_CONFIG: FacetConfig[] = [
     enabled: true,
   },
 
-  // ── Institution / collection ───────────────────────────────────────────────
-  {
-    key: 'herbarium',
-    type: 'terms',
-    label: 'Herbarium',
-    filterField: 'herbarium_acronym_facet',
-    facetField: 'herbarium_acronym_facet',
-    hasAutocomplete: false,
-    facetLimit: 30,
-    badgeClass: 'bg-secondary',
-    enabled: true,
-  },
-  {
-    key: 'catalogNumber',
-    type: 'terms',
-    label: 'Catalog number',
-    // catalog_number is StrField (no docValues) → use for filter
-    filterField: 'catalog_number',
-    // catalog_number_facet is StrField + docValues → use for counts
-    facetField: 'catalog_number_facet',
-    hasAutocomplete: false,
-    facetLimit: 30,
-    badgeClass: 'bg-secondary',
-    enabled: true,
-  },
+
 
   // ── Date range ─────────────────────────────────────────────────────────────
   {
@@ -227,28 +204,31 @@ export const FACET_CONFIG: FacetConfig[] = [
     enabled: true,
   },
 
-  // ── Preliminary / future ───────────────────────────────────────────────────
+  // ── Institution / collection ───────────────────────────────────────────────
   {
-    key: 'institution',
+    key: 'herbarium',
     type: 'terms',
-    label: 'Institution (full name)',
+    label: 'Herbarium',
     filterField: 'herbarium_acronym_facet',
     facetField: 'herbarium_acronym_facet',
     hasAutocomplete: false,
     facetLimit: 30,
     badgeClass: 'bg-secondary',
-    enabled: false,
+    enabled: true,
   },
+
+  // ── Preliminary / future ───────────────────────────────────────────────────
+
   {
-    key: 'year',
-    type: 'dateRange',
-    label: 'Collection year (1-year buckets)',
-    filterField: 'event_date_from',
-    facetField: 'event_date_from',
+    key: 'catalogNumber',
+    type: 'terms',
+    label: 'Catalog number',
+    // catalog_number is StrField (no docValues) → use for filter
+    filterField: 'catalog_number',
+    // catalog_number_facet is StrField + docValues → use for counts
+    facetField: 'catalog_number_facet',
     hasAutocomplete: false,
-    rangeStart: '1700-01-01T00:00:00Z',
-    rangeEnd: '2026-01-01T00:00:00Z',
-    rangeGap: '+1YEAR',
+    facetLimit: 30,
     badgeClass: 'bg-secondary',
     enabled: false,
   },
@@ -264,8 +244,8 @@ export const FACET_CONFIG: FacetConfig[] = [
     step: 100,
     unit: 'm',
     badgeClass: 'bg-secondary',
-    enabled: false,
-  },
+    enabled: true,
+  }
 ];
 
 export const FACET_CONFIG_MAP: Record<string, FacetConfig> = Object.fromEntries(

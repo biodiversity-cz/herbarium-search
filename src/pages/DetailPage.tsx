@@ -47,7 +47,7 @@ const LoadingState: React.FC = () => (
     <div className="container">
       <div className="detail-loading" role="status" aria-live="polite">
         <div className="spinner-border text-success" aria-hidden="true" />
-        <span className="visually-hidden">Loading specimen…</span>
+        <span className="visually-hidden">Loading images…</span>
       </div>
     </div>
   </div>
@@ -86,7 +86,7 @@ const DetailPage: React.FC = () => {
       .then(setRecord)
       .catch((err) => {
         console.error('Fetch error:', err);
-        setError('Failed to load specimen details. Please try again.');
+        setError('Failed to load images details. Please try again.');
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -100,7 +100,7 @@ const DetailPage: React.FC = () => {
   const recordedBy = asArray(record.recorded_by);
   const localities = asArray(record.locality);
   const herbariumAcronyms = asArray(record.herbarium_acronym);
-  const collectionCodes = asArray(record.collection_code);
+  // const collectionCodes = asArray(record.collection_code);
   const prevIds = asArray(record.previous_identifications);
 
   // Show recorded_by only if it differs from creator
@@ -122,17 +122,10 @@ const DetailPage: React.FC = () => {
           </button>
           <h1 className="detail-header__title">{scientificName}</h1>
           <div className="detail-header__meta">
-            {herbariumAcronyms.length > 0 && (
-              <span className="badge bg-taxon me-2">{herbariumAcronyms.join(', ')}</span>
-            )}
-            {record.catalog_number && (
-              <span className="detail-header__catalog">#{record.catalog_number}</span>
-            )}
-            {record.basis_of_record && (
-              <span className="detail-header__basis ms-2 text-white-50">
-                {record.basis_of_record}
-              </span>
-            )}
+          <span className="me-2">
+            {herbariumAcronyms.length > 0 && herbariumAcronyms.join(', ')}&nbsp;
+            {record.catalog_number && record.catalog_number}
+          </span>
           </div>
         </div>
       </div>
@@ -148,14 +141,10 @@ const DetailPage: React.FC = () => {
             <FieldRow label="Genus" value={record.genus} />
             <FieldRow label="Specific epithet" value={record.specific_epithet} />
             {prevIds.length > 0 && (
-              <FieldRow
-                label="Previous identifications"
-                value={
-                  <ul className="detail-list">
-                    {prevIds.map((p, i) => <li key={i}>{p}</li>)}
-                  </ul>
-                }
-              />
+                <FieldRow
+                    label="Previous identifications"
+                    value={prevIds.join(' → ')}
+                />
             )}
           </Section>
 
@@ -172,9 +161,9 @@ const DetailPage: React.FC = () => {
             )}
             <FieldRow label="Collection date" value={record.event_date_raw} />
             <FieldRow label="Catalog number" value={record.catalog_number} />
-            {collectionCodes.length > 0 && (
-              <FieldRow label="Collection code" value={collectionCodes.join(', ')} />
-            )}
+            {/*{collectionCodes.length > 0 && (*/}
+            {/*  <FieldRow label="Collection code" value={collectionCodes.join(', ')} />*/}
+            {/*)}*/}
             {herbariumAcronyms.length > 0 && (
               <FieldRow label="Herbarium" value={herbariumAcronyms.join(', ')} />
             )}
@@ -194,10 +183,20 @@ const DetailPage: React.FC = () => {
 
           {/* ── Identifiers & links ───────────────────────────────────────── */}
           <Section title="Identifiers">
-            <FieldRow label="Record ID" value={<code className="detail-id">{record.id}</code>} />
+            <FieldRow label="Image Record"
+                value={
+                        <a
+                            href={`https://n2t.org/${record.id}`}
+                            rel="noopener noreferrer"
+                            className="detail-link"
+                        >
+                          {record.id}
+                        </a>
+                      }
+            />
             {record.material_sample_id && (
               <FieldRow
-                label="Source record"
+                label="Floristic Record"
                 value={
                   <a
                     href={record.material_sample_id}

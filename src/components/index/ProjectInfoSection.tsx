@@ -53,7 +53,7 @@ const ProjectInfoSection: React.FC = () => {
               }
             />
             <StatCard
-              value="5"
+              value="7"
               label="Contributing herbaria"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
@@ -99,11 +99,10 @@ const ProjectInfoSection: React.FC = () => {
                 All data are published under open licences and conform to the{' '}
                 <strong>FAIR principles</strong> (Findable, Accessible, Interoperable, Reusable),
                 supporting integration with global biodiversity infrastructures such as GBIF and
-                DiSSCo.
+                DiSSCo, and the repository is part of the NRP Biodiversity Repository Cluster.
               </p>
-              {/* TODO: replace with real link when available */}
-              <a href="#" className="btn btn-outline-herb mt-2">
-                Learn more about the project
+              <a href="https://biodiversity.cz" className="btn btn-outline-herb mt-2">
+                Learn more about the NRP Biodiversity Repository Cluster
               </a>
             </div>
             <div className="col-lg-6">
@@ -125,8 +124,8 @@ const ProjectInfoSection: React.FC = () => {
           </div>
           <div className="row g-4">
             <FeatureCard
-              title="Smart autocomplete"
-              description="Search across taxa, collectors, and localities simultaneously. The intelligent suggester draws from three dedicated Solr dictionaries."
+              title="Smart search engine"
+              description="Search across taxa, collectors, localities and many other floristic fields. Combine multiple values to pinpoint exactly what you need."
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
@@ -134,17 +133,20 @@ const ProjectInfoSection: React.FC = () => {
               }
             />
             <FeatureCard
-              title="Faceted filtering"
-              description="Narrow results by taxon, collector, and locality using interactive facets. Combine multiple values to pinpoint exactly what you need."
+              title="Linked data"
+              description="Enjoy the interoperability of the repository with JACQ database and GBIF. "
               icon={
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z"/>
-                </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                      <circle cx="3" cy="8" r="2"/>
+                      <circle cx="13" cy="3" r="2"/>
+                      <circle cx="13" cy="13" r="2"/>
+                      <path d="M5 8h6M11.5 4.5L6.5 7.5M11.5 11.5L6.5 8.5" stroke="currentColor" fill="none"/>
+                  </svg>
               }
             />
             <FeatureCard
               title="High-resolution images"
-              description="Browse digitised specimen sheets with high-resolution imagery, label transcriptions, and full provenance metadata."
+              description="Browse digitised specimen sheets with high-resolution imagery and label transcriptions including AI tools."
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
@@ -155,6 +157,23 @@ const ProjectInfoSection: React.FC = () => {
           </div>
         </div>
       </div>
+
+        {/* ── Feature highlights ─────────────────────────────────────── */}
+        <div className="features-band">
+            <div className="container">
+                <div className="text-center mb-5">
+                    <h2 className="section-title">Join the party</h2>
+                </div>
+                <div className="row">
+                    <div className="col-md-8 offset-md-2">
+                        <div className="feature-card">
+                            <h3 className="feature-title">We are open to all institutional herbaria</h3>
+                            <p className="feature-description">Get free access to tools and storage provided by the repository, and publish your data. We will help you with occurrence publishing at GBIF, setting up a images deposit pipeline for your herbarium. Let's open benefits of FAIR data to all!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
       {/* ── Partners / funding ─────────────────────────────────────── */}
       <div className="partners-band">

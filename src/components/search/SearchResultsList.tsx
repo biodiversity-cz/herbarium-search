@@ -1,6 +1,6 @@
 import React from 'react';
 import { HerbariumRecord } from '@types';
-import ResultCard from './CustomReactiveList';
+import ResultCard from './ResultCard';
 
 interface SearchResultsListProps {
   results: HerbariumRecord[];

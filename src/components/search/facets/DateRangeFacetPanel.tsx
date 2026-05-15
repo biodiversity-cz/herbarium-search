@@ -99,9 +99,9 @@ const DateRangeFacetPanel: React.FC<DateRangeFacetPanelProps> = ({
                 type="button"
                 className={`date-range-bar${isInRange ? ' is-selected' : ''}`}
                 style={{ height: `${heightPct}%` }}
-                title={`${bucket.value}: ${bucket.count.toLocaleString()} specimens`}
+                title={`${bucket.value}: ${bucket.count.toLocaleString()} images`}
                 onClick={() => handleBucketClick(bucket)}
-                aria-label={`${bucket.value}: ${bucket.count} specimens`}
+                aria-label={`${bucket.value}: ${bucket.count} images`}
               />
             );
           })}

@@ -56,12 +56,9 @@ const ResultCard: React.FC<ResultCardProps> = ({ record }) => {
             </div>
           </div>
           <div className="result-card__badges flex-shrink-0 text-end">
-            {herbarium && (
-              <span className="badge bg-taxon">{herbarium}</span>
-            )}
-            {record.catalog_number && (
-              <div className="result-card__catalog mt-1">{record.catalog_number}</div>
-            )}
+            {herbarium && (herbarium
+            )}&nbsp;
+            {record.catalog_number && (record.catalog_number)}
           </div>
         </div>
       </div>

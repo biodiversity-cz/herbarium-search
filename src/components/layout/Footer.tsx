@@ -6,8 +6,7 @@ const Footer: React.FC = () => {
       <div className="container">
         <div className="footer-inner">
           <div className="footer-brand">
-            <span className="brand-leaf" aria-hidden="true">🌿</span>
-            <span className="footer-brand-name">HerbCol</span>
+            <span className="footer-brand-name">HerbBio NRP</span>
           </div>
 
           <p className="footer-tagline">
@@ -15,11 +14,9 @@ const Footer: React.FC = () => {
           </p>
 
           <div className="footer-meta">
-            <span>v0.1</span>
-            <span className="footer-sep" aria-hidden="true">·</span>
             <span>NRP KA 3.3</span>
             <span className="footer-sep" aria-hidden="true">·</span>
-            <span>© {new Date().getFullYear()} onwards</span>
+            <span>2024 onwards</span>
             <span className="footer-sep" aria-hidden="true">·</span>
             <a
               href="https://github.com/biodiversity-cz"
