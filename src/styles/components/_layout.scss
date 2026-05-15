@@ -1,15 +1,4 @@
-// ─── Design tokens ────────────────────────────────────────────────────────────
-$herb-900: #0d2b1a;   // darkest green – hero bg
-$herb-800: #14401f;
-$herb-700: #1a5c2a;   // primary brand green
-$herb-600: #217a35;
-$herb-500: #2e9e47;   // mid green
-$herb-400: #4db86a;
-$herb-300: #7dd49a;
-$herb-100: #e8f5ec;   // very light tint
-$herb-50:  #f4fbf6;
-
-$header-height: 64px;
+// Variables are now imported globally from _variables.scss
 
 // ─── Fixed header ─────────────────────────────────────────────────────────────
 .app-header {

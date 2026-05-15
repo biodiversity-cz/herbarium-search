@@ -8,7 +8,7 @@
 
 // ── Search header banner ───────────────────────────────────────────────────────
 .search-header {
-  background: linear-gradient(135deg, #1a5c2a 0%, #0d2b1a 100%);
+  background: linear-gradient(135deg, $herb-700 0%, $herb-900 100%);
   color: #fff;
   padding: 2.5rem 0;
   margin-bottom: 0;
@@ -66,7 +66,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #1a5c2a;
+    color: $herb-700;
     margin: 0;
   }
 }
@@ -147,7 +147,7 @@
 
     &:hover,
     &.is-highlighted {
-      background-color: #f4fbf6;
+      background-color: $herb-100;
     }
   }
 }
@@ -222,7 +222,7 @@
   gap: 0.4rem;
 
   &:hover {
-    background-color: #f4fbf6;
+    background-color: $herb-100;
   }
 
   &.is-selected {
@@ -274,7 +274,7 @@
 
 .search-stats {
   padding: 0.75rem 1rem;
-  background: #f4fbf6;
+  background: $herb-50;
   border-radius: 0.4rem;
   margin-bottom: 1rem;
   font-size: 0.9rem;
@@ -319,9 +319,9 @@
     border-color: #c8dece;
 
     &:hover {
-      background-color: #f4fbf6;
-      border-color: #2e9e47;
-      color: #1a5c2a;
+      background-color: $herb-100;
+      border-color: $herb-500;
+      color: $herb-700;
     }
   }
 
@@ -368,7 +368,7 @@
 
     &:hover,
     &.highlighted {
-      background-color: #f4fbf6;
+      background-color: $herb-100;
     }
 
     .term {

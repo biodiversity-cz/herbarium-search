@@ -1,8 +1,8 @@
+// Custom variables - imported first so they're available to all components
+@import "variables";
+
 // Import Bootstrap 5
 @import "bootstrap/scss/bootstrap";
-
-// Custom variables (override before importing bootstrap if needed)
-// @import "variables";
 
 // ===========================================
 // FONT CONFIGURATION

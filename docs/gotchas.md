@@ -193,3 +193,5 @@ Edit `src/styles/components/_layout.scss` around line 30:
 This will make the white zone end much earlier (before reaching EOSC logo area).
 
 **Rule:** Use percentages (%) for the positions. All variables are inherited by both hero and scrolled states automatically.
+
+ 

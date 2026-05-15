@@ -42,7 +42,8 @@ Always use aliases, never relative `../../` imports across feature boundaries.
 - Green palette tokens (used throughout):
   - Dark green: `#1a5c2a`
   - Mid green: `#2e9e47`
-  - Light green bg: `#f4fbf6`
+  - Light green bg: `#f4fbf6` (static backgrounds)
+  - Highlight/hover bg: `#e8f5ec` (interactive states)
   - Border green: `#c8dece` / `#e0ede4`
 - Bootstrap 5 utility classes are used freely for layout/spacing. Custom classes for anything semantic.
 - Badge colour classes: `.bg-taxon` (green), `.bg-collector` (amber), `.bg-locality` (dark green).
