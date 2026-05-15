@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { SEARCH_STATE_STORAGE_KEY } from '@/types/suggestion';
 
 interface SearchPageHeaderProps {
   query: string;
@@ -11,6 +12,22 @@ interface SearchPageHeaderProps {
  * Top banner for the search page showing the active query and result count.
  */
 const SearchPageHeader: React.FC<SearchPageHeaderProps> = ({ query, totalResults, loading }) => {
+  const navigate = useNavigate();
+
+  const handleNewSearch = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    
+    // Clear session stored search state
+    try {
+      sessionStorage.removeItem(SEARCH_STATE_STORAGE_KEY);
+    } catch {
+      // sessionStorage not available – silently ignore
+    }
+    
+    // Navigate to home page
+    navigate('/');
+  };
+
   return (
     <div className="search-header">
       <div className="container">
@@ -29,7 +46,7 @@ const SearchPageHeader: React.FC<SearchPageHeaderProps> = ({ query, totalResults
               </p>
             )}
           </div>
-          <Link to="/" className="btn btn-outline-light btn-sm">
+          <Link to="/" className="btn btn-outline-light btn-sm" onClick={handleNewSearch}>
             ← New search
           </Link>
         </div>
