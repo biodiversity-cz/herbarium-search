@@ -1,7 +1,10 @@
 import React from 'react';
+import SpecimenCount from './SpecimenCount';
+import HerbariaCount from './HerbariaCount';
+import SpeciesCount from './SpeciesCount';
 
 interface StatCardProps {
-  value: string;
+  value: string | React.ReactNode;
   label: string;
   icon: React.ReactNode;
 }
@@ -44,7 +47,7 @@ const ProjectInfoSection: React.FC = () => {
         <div className="container">
           <div className="row g-4 justify-content-center">
             <StatCard
-              value="50 000+"
+              value={<SpecimenCount />}
               label="Digitised specimens"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
@@ -53,7 +56,7 @@ const ProjectInfoSection: React.FC = () => {
               }
             />
             <StatCard
-              value="7"
+              value={<HerbariaCount />}
               label="Contributing herbaria"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
@@ -62,7 +65,7 @@ const ProjectInfoSection: React.FC = () => {
               }
             />
             <StatCard
-              value="3 000+"
+              value={<SpeciesCount />}
               label="Species represented"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">

@@ -158,3 +158,63 @@ export async function getSuggestions(query: string): Promise<SuggesterResponse> 
   const response = await solrAxios.get<SuggesterResponse>('/suggest', { params });
   return response.data;
 }
+
+/**
+ * Get total count of documents in the Solr collection.
+ */
+export async function getTotalCount(): Promise<number> {
+  const response = await solrAxios.get<SolrResponse>('/select', {
+    params: { q: '*:*', rows: 0 },
+  });
+  return response.data.response.numFound;
+}
+
+/**
+ * Get count of contributing herbaria using Solr JSON Facet API.
+ */
+export async function getHerbariaCount(): Promise<number> {
+  const response = await solrAxios.get<SolrResponse>('/select', {
+    params: {
+      q: '*:*',
+      rows: 0,
+      'json.facet': JSON.stringify({
+        unique_herbaria: "unique(herbarium_acronym_facet)"
+      })
+    }
+  });
+  
+  // The JSON Facet API returns the unique count directly in the facets object
+  const uniqueHerbariaCount = response.data.facets?.unique_herbaria;
+  
+  if (typeof uniqueHerbariaCount !== 'number') {
+    console.warn('Unexpected response format for herbaria count:', response.data);
+    return 0;
+  }
+  
+  return uniqueHerbariaCount;
+}
+
+/**
+ * Get count of unique species using Solr JSON Facet API.
+ */
+export async function getSpeciesCount(): Promise<number> {
+  const response = await solrAxios.get<SolrResponse>('/select', {
+    params: {
+      q: '*:*',
+      rows: 0,
+      'json.facet': JSON.stringify({
+        unique_species: "unique(scientific_name_facet)"
+      })
+    }
+  });
+  
+  // The JSON Facet API returns the unique count directly in the facets object
+  const uniqueSpeciesCount = response.data.facets?.unique_species;
+  
+  if (typeof uniqueSpeciesCount !== 'number') {
+    console.warn('Unexpected response format for species count:', response.data);
+    return 0;
+  }
+  
+  return uniqueSpeciesCount;
+}

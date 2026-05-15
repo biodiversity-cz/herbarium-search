@@ -194,4 +194,48 @@ This will make the white zone end much earlier (before reaching EOSC logo area).
 
 **Rule:** Use percentages (%) for the positions. All variables are inherited by both hero and scrolled states automatically.
 
+---
+
+## 13. JSON Facet API for unique counts
+
+**Usage:** To get unique counts (e.g., unique species), use Solr's JSON Facet API via the `json.facet` parameter on the `/select` endpoint, not the traditional `facet.field` approach.
+
+**Examples:** 
+
+Count unique species:
+```ts
+const response = await solrAxios.get('/select', {
+  params: {
+    q: '*:*',
+    rows: 0,
+    'json.facet': JSON.stringify({
+      unique_species: "unique(scientific_name_facet)"
+    })
+  }
+});
+
+const count = response.data.facets?.unique_species; // Returns 9409
+```
+
+Count unique herbaria:
+```ts
+const response = await solrAxios.get('/select', {
+  params: {
+    q: '*:*',
+    rows: 0,
+    'json.facet': JSON.stringify({
+      unique_herbaria: "unique(herbarium_acronym_facet)"
+    })
+  }
+});
+
+const count = response.data.facets?.unique_herbaria; // Returns 3
+```
+
+**Why JSON Facet API:** The traditional `facet.field` approach requires counting all individual facet values and summing them up, which is inefficient for large datasets. The JSON Facet API's `unique()` function calculates the exact unique count directly in Solr.
+
+**Response structure:** JSON Facet API responses include a `facets` object alongside the traditional `facet_counts`. The `SolrResponse` interface supports both formats.
+
+**Rule:** Use `unique()` function for distinct counts, traditional faceting for value distributions with counts.
+
  

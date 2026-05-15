@@ -89,6 +89,11 @@ export interface SolrResponse {
       end: string;
     }>;
   };
+  // JSON Facet API response (when using json.facet parameter)
+  facets?: {
+    count?: number;
+    [key: string]: any; // Allows for custom facet names like unique_species
+  };
 }
 
 /**
