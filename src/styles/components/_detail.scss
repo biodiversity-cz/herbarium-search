@@ -9,7 +9,7 @@
 .detail-header {
   background: linear-gradient(135deg, #1a5c2a 0%, #0d2b1a 100%);
   color: #fff;
-  padding: 2rem 0 2.5rem;
+  padding: 0.4rem 0 0;
   margin-bottom: 0;
 
   &__back {
@@ -52,14 +52,6 @@
   }
 }
 
-// ── Body layout ───────────────────────────────────────────────────────────────
-.detail-body {
-  padding-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0; // sections handle their own spacing
-  max-width: 860px;
-}
 
 // ── Section ───────────────────────────────────────────────────────────────────
 .detail-section {
@@ -178,4 +170,12 @@
     display: block;
     width: 100%;
   }
+}
+
+.mirador-container {
+  width: 100%; height: 100%; position: relative
+}
+.mirador-viewer * {
+  font-family: var(--font-family-main) !important;
+  font-weight: var(--font-weight-light) !important;
 }
