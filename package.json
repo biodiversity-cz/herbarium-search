@@ -19,7 +19,8 @@
     "react": "^19",
     "react-dom": "^19",
     "react-router-dom": "^7",
-    "react-select": "^5.10.2"
+    "react-select": "^5.10.2",
+    "swagger-ui-react": "^5"
   },
   "devDependencies": {
     "@types/react": "^19",

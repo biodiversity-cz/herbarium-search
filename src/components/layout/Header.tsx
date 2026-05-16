@@ -96,6 +96,11 @@ const Header: React.FC = () => {
                 </a>
               </li>
               <li className="nav-item">
+                <Link className={`nav-link ${location.pathname === '/apidoc' ? 'active' : ''}`} to="/apidoc">
+                  Api
+                </Link>
+              </li>
+              <li className="nav-item">
                 <a
                     href="https://herbarium.biodiversity.cz/sign/in"
                     target="_blank"

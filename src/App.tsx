@@ -4,6 +4,7 @@ import Layout from '@components/layout/Layout';
 import IndexPage from '@pages/IndexPage';
 import SearchPage from '@pages/SearchPage';
 import DetailPage from '@pages/DetailPage';
+import ApiDocPage from "@pages/ApiDocPage.tsx";
 
 const App: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const App: React.FC = () => {
           <Route index element={<IndexPage />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="detail/:id" element={<DetailPage />} />
+          <Route path="apidoc" element={<ApiDocPage />} />
         </Route>
       </Routes>
     </Router>
